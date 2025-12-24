@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Save, Eye, Sparkles, User, FileText, MousePointer, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Eye, Sparkles, User, FileText, MousePointer, Loader2, Menu, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { LandingPageFormData, defaultFormData } from "@/types/landing-page";
 import PerfilTab from "@/components/trustpage/PerfilTab";
@@ -13,6 +13,12 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 const TrustPageEditor = () => {
   const { id } = useParams<{ id: string }>();
@@ -22,6 +28,7 @@ const TrustPageEditor = () => {
   const [isLoading, setIsLoading] = useState(!!id);
   const [userPlan, setUserPlan] = useState<'essential' | 'elite'>('essential');
   const [existingPageId, setExistingPageId] = useState<string | null>(null);
+  const [showMobilePreview, setShowMobilePreview] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -219,32 +226,44 @@ const TrustPageEditor = () => {
     <div className="min-h-screen bg-muted/30">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background border-b border-border">
-        <div className="flex items-center justify-between px-4 h-14">
-          <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between px-3 sm:px-4 h-14">
+          <div className="flex items-center gap-2 sm:gap-4">
             <Link to="/dashboard" className="text-muted-foreground hover:text-foreground">
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div className="flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-primary" />
-              <span className="font-semibold text-foreground">TrustPage</span>
+              <span className="font-semibold text-foreground hidden sm:inline">TrustPage</span>
             </div>
           </div>
           
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handlePreview}>
+            {/* Mobile Preview Toggle */}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="lg:hidden"
+              onClick={() => setShowMobilePreview(true)}
+            >
+              <Eye className="w-4 h-4" />
+              <span className="hidden sm:inline ml-2">Prévia</span>
+            </Button>
+            
+            {/* Desktop Preview Button */}
+            <Button variant="outline" size="sm" onClick={handlePreview} className="hidden lg:flex">
               <Eye className="w-4 h-4 mr-2" />
               Prévia
             </Button>
             <Button size="sm" onClick={handleSave} disabled={isSaving}>
               {isSaving ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Salvando...
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span className="hidden sm:inline ml-2">Salvando...</span>
                 </>
               ) : (
                 <>
-                  <Save className="w-4 h-4 mr-2" />
-                  Salvar
+                  <Save className="w-4 h-4" />
+                  <span className="hidden sm:inline ml-2">Salvar</span>
                 </>
               )}
             </Button>
@@ -253,23 +272,23 @@ const TrustPageEditor = () => {
       </header>
 
       {/* Editor Layout */}
-      <div className="flex h-[calc(100vh-56px)]">
-        {/* Left Panel - Form */}
-        <div className="w-[400px] bg-background border-r border-border overflow-y-auto">
-          <div className="p-4">
+      <div className="flex flex-col lg:flex-row h-[calc(100vh-56px)]">
+        {/* Left Panel - Form (Full width on mobile) */}
+        <div className="w-full lg:w-[400px] xl:w-[450px] bg-background lg:border-r border-border overflow-y-auto flex-shrink-0">
+          <div className="p-3 sm:p-4">
             <Tabs defaultValue="perfil" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 mb-6">
-                <TabsTrigger value="perfil" className="flex items-center gap-1.5 text-xs">
+              <TabsList className="grid w-full grid-cols-3 mb-4 sm:mb-6">
+                <TabsTrigger value="perfil" className="flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm px-2 sm:px-3">
                   <User className="w-3.5 h-3.5" />
-                  Perfil
+                  <span>Perfil</span>
                 </TabsTrigger>
-                <TabsTrigger value="conteudo" className="flex items-center gap-1.5 text-xs">
+                <TabsTrigger value="conteudo" className="flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm px-2 sm:px-3">
                   <FileText className="w-3.5 h-3.5" />
-                  Conteúdo
+                  <span>Conteúdo</span>
                 </TabsTrigger>
-                <TabsTrigger value="acoes" className="flex items-center gap-1.5 text-xs">
+                <TabsTrigger value="acoes" className="flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm px-2 sm:px-3">
                   <MousePointer className="w-3.5 h-3.5" />
-                  Ações
+                  <span>Ações</span>
                 </TabsTrigger>
               </TabsList>
               
@@ -286,15 +305,41 @@ const TrustPageEditor = () => {
               </TabsContent>
             </Tabs>
           </div>
+          
+          {/* Mobile Preview Button (Fixed at bottom on mobile) */}
+          <div className="lg:hidden fixed bottom-4 left-4 right-4 z-40">
+            <Button 
+              className="w-full gradient-button py-6 font-semibold shadow-lg"
+              onClick={() => setShowMobilePreview(true)}
+            >
+              <Eye className="w-5 h-5 mr-2" />
+              Ver Prévia da Página
+            </Button>
+          </div>
+          
+          {/* Spacer for fixed button */}
+          <div className="lg:hidden h-24" />
         </div>
 
-        {/* Right Panel - Preview (Sticky) */}
-        <div className="flex-1 bg-muted/50 flex items-start justify-center overflow-hidden">
+        {/* Right Panel - Preview (Hidden on mobile, visible on lg+) */}
+        <div className="hidden lg:flex flex-1 bg-muted/50 items-start justify-center overflow-hidden">
           <div className="sticky top-0 h-full flex items-center">
             <MobilePreview formData={formData} />
           </div>
         </div>
       </div>
+
+      {/* Mobile Preview Sheet */}
+      <Sheet open={showMobilePreview} onOpenChange={setShowMobilePreview}>
+        <SheetContent side="bottom" className="h-[85vh] p-0 rounded-t-3xl">
+          <SheetHeader className="p-4 border-b">
+            <SheetTitle className="text-center">Prévia da Página</SheetTitle>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto bg-muted/50 flex items-start justify-center p-4 h-[calc(85vh-60px)]">
+            <MobilePreview formData={formData} />
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };

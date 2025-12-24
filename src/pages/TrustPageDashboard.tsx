@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Sparkles, ExternalLink, BarChart3, Copy, Trash2, LogOut, Loader2, Crown, Clock, AlertTriangle } from "lucide-react";
+import { Plus, Sparkles, ExternalLink, BarChart3, Copy, Trash2, LogOut, Loader2, Crown, Clock, AlertTriangle, Menu } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -149,19 +149,19 @@ const TrustPageDashboard = () => {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background border-b border-border">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-14 sm:h-16">
             <Link to="/dashboard" className="flex items-center gap-2">
-              <Sparkles className="w-6 h-6 text-primary" />
-              <span className="text-xl font-bold text-foreground">TrustPage</span>
+              <Sparkles className="w-5 sm:w-6 h-5 sm:h-6 text-primary" />
+              <span className="text-lg sm:text-xl font-bold text-foreground">TrustPage</span>
             </Link>
             
-            <div className="flex items-center gap-4">
-              <Button onClick={handleNewPage} disabled={isTrialExpired}>
-                <Plus className="w-4 h-4 mr-2" />
-                Nova Página
+            <div className="flex items-center gap-2 sm:gap-4">
+              <Button onClick={handleNewPage} disabled={isTrialExpired} size="sm" className="sm:size-default">
+                <Plus className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Nova Página</span>
               </Button>
-              <Button variant="ghost" size="icon" onClick={handleLogout}>
-                <LogOut className="w-5 h-5" />
+              <Button variant="ghost" size="icon" onClick={handleLogout} className="h-9 w-9 sm:h-10 sm:w-10">
+                <LogOut className="w-4 sm:w-5 h-4 sm:h-5" />
               </Button>
             </div>
           </div>
@@ -177,15 +177,15 @@ const TrustPageDashboard = () => {
               ? 'bg-amber-50 border-amber-200' 
               : 'bg-primary/5 border-primary/20'
         }`}>
-          <div className="container mx-auto px-4 py-3">
-            <div className="flex items-center justify-between gap-4 flex-wrap">
-              <div className="flex items-center gap-3">
+          <div className="container mx-auto px-4 py-2 sm:py-3">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4">
+              <div className="flex items-center gap-2 sm:gap-3 text-center sm:text-left">
                 {isTrialExpired ? (
-                  <AlertTriangle className="w-5 h-5 text-red-600" />
+                  <AlertTriangle className="w-4 sm:w-5 h-4 sm:h-5 text-red-600 flex-shrink-0" />
                 ) : (
-                  <Clock className="w-5 h-5 text-primary" />
+                  <Clock className="w-4 sm:w-5 h-4 sm:h-5 text-primary flex-shrink-0" />
                 )}
-                <p className={`font-medium ${isTrialExpired ? 'text-red-700' : 'text-foreground'}`}>
+                <p className={`text-xs sm:text-sm font-medium ${isTrialExpired ? 'text-red-700' : 'text-foreground'}`}>
                   {isTrialExpired 
                     ? 'Período de teste expirado. Suas páginas estão suspensas.' 
                     : `Seu teste grátis acaba em ${trialDaysRemaining} dia${trialDaysRemaining !== 1 ? 's' : ''}. Aproveite para vender!`
@@ -196,9 +196,9 @@ const TrustPageDashboard = () => {
                 variant={isTrialExpired ? "default" : "outline"} 
                 size="sm"
                 onClick={() => setShowUpgradeModal(true)}
-                className={isTrialExpired ? 'bg-red-600 hover:bg-red-700' : ''}
+                className={`${isTrialExpired ? 'bg-red-600 hover:bg-red-700' : ''} whitespace-nowrap`}
               >
-                <Crown className="w-4 h-4 mr-2" />
+                <Crown className="w-3.5 sm:w-4 h-3.5 sm:h-4 mr-1.5 sm:mr-2" />
                 {isTrialExpired ? 'Assinar Agora' : 'Fazer Upgrade'}
               </Button>
             </div>
@@ -212,7 +212,7 @@ const TrustPageDashboard = () => {
           <div className="container mx-auto px-4 py-2">
             <div className="flex items-center gap-2">
               <Crown className="w-4 h-4 text-green-600" />
-              <p className="text-sm font-medium text-green-700">
+              <p className="text-xs sm:text-sm font-medium text-green-700">
                 Plano {profile.plan_type === 'pro' ? 'Pro' : 'Essencial'} ativo
               </p>
             </div>
@@ -221,20 +221,20 @@ const TrustPageDashboard = () => {
       )}
 
       {/* Content */}
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-8 flex items-center justify-between">
+      <main className="container mx-auto px-4 py-6 sm:py-8">
+        <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Suas Landing Pages</h1>
-            <p className="text-muted-foreground">Gerencie suas páginas de alta conversão</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Suas Landing Pages</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">Gerencie suas páginas de alta conversão</p>
           </div>
           
           {/* Page Counter */}
-          <div className={`flex items-center gap-2 px-4 py-2 rounded-full ${
+          <div className={`inline-flex self-start sm:self-auto items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-sm ${
             hasReachedLimit 
               ? 'bg-amber-100 text-amber-700 border border-amber-300' 
               : 'bg-primary/10 text-primary'
           }`}>
-            {hasReachedLimit && <Crown className="w-4 h-4" />}
+            {hasReachedLimit && <Crown className="w-3.5 sm:w-4 h-3.5 sm:h-4" />}
             <span className="font-semibold">{pages.length}/{maxPages} páginas</span>
           </div>
         </div>
@@ -244,15 +244,15 @@ const TrustPageDashboard = () => {
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
         ) : pages.length === 0 ? (
-          <Card className="text-center py-12">
+          <Card className="text-center py-10 sm:py-12">
             <CardContent>
               <div className="flex flex-col items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Sparkles className="w-8 h-8 text-primary" />
+                <div className="w-14 sm:w-16 h-14 sm:h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Sparkles className="w-7 sm:w-8 h-7 sm:h-8 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-foreground">Crie sua primeira página</h3>
-                  <p className="text-muted-foreground">Comece a converter visitantes em clientes</p>
+                  <h3 className="text-base sm:text-lg font-semibold text-foreground">Crie sua primeira página</h3>
+                  <p className="text-sm sm:text-base text-muted-foreground">Comece a converter visitantes em clientes</p>
                 </div>
                 <Button onClick={handleNewPage} disabled={isTrialExpired}>
                   <Plus className="w-4 h-4 mr-2" />
@@ -262,7 +262,7 @@ const TrustPageDashboard = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {/* Create New Card */}
             <Card 
               className={`h-full border-dashed transition-colors cursor-pointer ${
@@ -274,29 +274,29 @@ const TrustPageDashboard = () => {
               }`}
               onClick={handleNewPage}
             >
-              <CardContent className="flex flex-col items-center justify-center h-full min-h-[200px] gap-3">
+              <CardContent className="flex flex-col items-center justify-center h-full min-h-[160px] sm:min-h-[200px] gap-2 sm:gap-3">
                 {isTrialExpired ? (
                   <>
-                    <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-                      <AlertTriangle className="w-6 h-6 text-red-600" />
+                    <div className="w-10 sm:w-12 h-10 sm:h-12 rounded-full bg-red-100 flex items-center justify-center">
+                      <AlertTriangle className="w-5 sm:w-6 h-5 sm:h-6 text-red-600" />
                     </div>
-                    <p className="font-medium text-red-700">Trial expirado</p>
-                    <p className="text-sm text-red-600">Assine para continuar</p>
+                    <p className="font-medium text-red-700 text-sm sm:text-base">Trial expirado</p>
+                    <p className="text-xs sm:text-sm text-red-600">Assine para continuar</p>
                   </>
                 ) : hasReachedLimit ? (
                   <>
-                    <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
-                      <Crown className="w-6 h-6 text-amber-600" />
+                    <div className="w-10 sm:w-12 h-10 sm:h-12 rounded-full bg-amber-100 flex items-center justify-center">
+                      <Crown className="w-5 sm:w-6 h-5 sm:h-6 text-amber-600" />
                     </div>
-                    <p className="font-medium text-amber-700">Limite atingido</p>
-                    <p className="text-sm text-amber-600">Faça upgrade para criar mais</p>
+                    <p className="font-medium text-amber-700 text-sm sm:text-base">Limite atingido</p>
+                    <p className="text-xs sm:text-sm text-amber-600">Faça upgrade para criar mais</p>
                   </>
                 ) : (
                   <>
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Plus className="w-6 h-6 text-primary" />
+                    <div className="w-10 sm:w-12 h-10 sm:h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Plus className="w-5 sm:w-6 h-5 sm:h-6 text-primary" />
                     </div>
-                    <p className="font-medium text-foreground">Nova Página</p>
+                    <p className="font-medium text-foreground text-sm sm:text-base">Nova Página</p>
                   </>
                 )}
               </CardContent>
@@ -305,16 +305,16 @@ const TrustPageDashboard = () => {
             {/* Existing Pages */}
             {pages.map((page) => (
               <Card key={page.id} className={`hover:shadow-md transition-shadow ${isTrialExpired ? 'opacity-75' : ''}`}>
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="text-base">{page.page_name || 'Sem nome'}</CardTitle>
-                      <CardDescription className="text-xs mt-1">
+                <CardHeader className="pb-2 sm:pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <CardTitle className="text-sm sm:text-base truncate">{page.page_name || 'Sem nome'}</CardTitle>
+                      <CardDescription className="text-xs mt-1 truncate">
                         /p/{page.slug}
                       </CardDescription>
                     </div>
-                    <div className="flex flex-col gap-1 items-end">
-                      <span className={`text-xs px-2 py-1 rounded-full ${
+                    <div className="flex flex-col gap-1 items-end flex-shrink-0">
+                      <span className={`text-[10px] sm:text-xs px-2 py-0.5 sm:py-1 rounded-full whitespace-nowrap ${
                         page.is_published 
                           ? 'bg-green-100 text-green-700' 
                           : 'bg-yellow-100 text-yellow-700'
@@ -322,51 +322,51 @@ const TrustPageDashboard = () => {
                         {page.is_published ? 'Publicado' : 'Rascunho'}
                       </span>
                       {isTrialExpired && page.is_published && (
-                        <span className="text-xs px-2 py-1 rounded-full bg-red-100 text-red-700">
+                        <span className="text-[10px] sm:text-xs px-2 py-0.5 sm:py-1 rounded-full bg-red-100 text-red-700 whitespace-nowrap">
                           Suspenso
                         </span>
                       )}
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
+                <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
+                  <div className="flex items-center gap-4 text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">
                     <div className="flex items-center gap-1">
-                      <BarChart3 className="w-4 h-4" />
+                      <BarChart3 className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
                       <span>{page.views || 0} views</span>
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 sm:gap-2">
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="flex-1"
+                      className="flex-1 text-xs sm:text-sm h-8 sm:h-9"
                       onClick={() => handleEdit(page.id)}
                       disabled={isTrialExpired}
                     >
                       Editar
                     </Button>
                     <Link to={`/p/${page.slug}`} target="_blank">
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <ExternalLink className="w-4 h-4" />
+                      <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9">
+                        <ExternalLink className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
                       </Button>
                     </Link>
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      className="h-8 w-8"
+                      className="h-8 w-8 sm:h-9 sm:w-9"
                       onClick={() => handleCopyLink(page.slug)}
                     >
-                      <Copy className="w-4 h-4" />
+                      <Copy className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
                     </Button>
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      className="h-8 w-8 text-destructive hover:text-destructive"
+                      className="h-8 w-8 sm:h-9 sm:w-9 text-destructive hover:text-destructive"
                       onClick={() => handleDelete(page.id, page.page_name || '')}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
                     </Button>
                   </div>
                 </CardContent>
