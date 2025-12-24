@@ -14,6 +14,75 @@ export type Database = {
   }
   public: {
     Tables: {
+      landing_pages: {
+        Row: {
+          colors: Json | null
+          created_at: string
+          cta_text: string | null
+          cta_url: string | null
+          description: string | null
+          headline: string | null
+          id: string
+          image_url: string | null
+          is_published: boolean | null
+          page_name: string | null
+          pix_pixel_id: string | null
+          profile_image_url: string | null
+          slug: string
+          subheadline: string | null
+          template_id: number
+          updated_at: string
+          user_id: string
+          video_url: string | null
+          views: number | null
+          whatsapp_number: string | null
+        }
+        Insert: {
+          colors?: Json | null
+          created_at?: string
+          cta_text?: string | null
+          cta_url?: string | null
+          description?: string | null
+          headline?: string | null
+          id?: string
+          image_url?: string | null
+          is_published?: boolean | null
+          page_name?: string | null
+          pix_pixel_id?: string | null
+          profile_image_url?: string | null
+          slug: string
+          subheadline?: string | null
+          template_id?: number
+          updated_at?: string
+          user_id: string
+          video_url?: string | null
+          views?: number | null
+          whatsapp_number?: string | null
+        }
+        Update: {
+          colors?: Json | null
+          created_at?: string
+          cta_text?: string | null
+          cta_url?: string | null
+          description?: string | null
+          headline?: string | null
+          id?: string
+          image_url?: string | null
+          is_published?: boolean | null
+          page_name?: string | null
+          pix_pixel_id?: string | null
+          profile_image_url?: string | null
+          slug?: string
+          subheadline?: string | null
+          template_id?: number
+          updated_at?: string
+          user_id?: string
+          video_url?: string | null
+          views?: number | null
+          whatsapp_number?: string | null
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string
