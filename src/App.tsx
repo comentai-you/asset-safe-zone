@@ -8,6 +8,9 @@ import Wallet from "./pages/Wallet";
 import Auth from "./pages/Auth";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import TrustPageDashboard from "./pages/TrustPageDashboard";
+import TrustPageEditor from "./pages/TrustPageEditor";
+import LandingPageView from "./pages/LandingPageView";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +25,13 @@ const App = () => (
           <Route path="/wallet" element={<Wallet />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/settings" element={<Settings />} />
+          
+          {/* TrustPage Routes */}
+          <Route path="/trustpage" element={<TrustPageDashboard />} />
+          <Route path="/trustpage/new" element={<TrustPageEditor />} />
+          <Route path="/trustpage/edit/:id" element={<TrustPageEditor />} />
+          <Route path="/p/:slug" element={<LandingPageView />} />
+          
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
