@@ -17,6 +17,7 @@ export type Database = {
       landing_pages: {
         Row: {
           colors: Json | null
+          content: Json | null
           created_at: string
           cta_delay_enabled: boolean | null
           cta_delay_percentage: number | null
@@ -29,10 +30,12 @@ export type Database = {
           is_published: boolean | null
           page_name: string | null
           pix_pixel_id: string | null
+          primary_color: string | null
           profile_image_url: string | null
           slug: string
           subheadline: string | null
           template_id: number
+          template_type: string
           updated_at: string
           user_id: string
           video_storage_path: string | null
@@ -42,6 +45,7 @@ export type Database = {
         }
         Insert: {
           colors?: Json | null
+          content?: Json | null
           created_at?: string
           cta_delay_enabled?: boolean | null
           cta_delay_percentage?: number | null
@@ -54,10 +58,12 @@ export type Database = {
           is_published?: boolean | null
           page_name?: string | null
           pix_pixel_id?: string | null
+          primary_color?: string | null
           profile_image_url?: string | null
           slug: string
           subheadline?: string | null
           template_id?: number
+          template_type?: string
           updated_at?: string
           user_id: string
           video_storage_path?: string | null
@@ -67,6 +73,7 @@ export type Database = {
         }
         Update: {
           colors?: Json | null
+          content?: Json | null
           created_at?: string
           cta_delay_enabled?: boolean | null
           cta_delay_percentage?: number | null
@@ -79,10 +86,12 @@ export type Database = {
           is_published?: boolean | null
           page_name?: string | null
           pix_pixel_id?: string | null
+          primary_color?: string | null
           profile_image_url?: string | null
           slug?: string
           subheadline?: string | null
           template_id?: number
+          template_type?: string
           updated_at?: string
           user_id?: string
           video_storage_path?: string | null

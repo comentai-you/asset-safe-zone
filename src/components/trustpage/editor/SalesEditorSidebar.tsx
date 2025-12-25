@@ -1,0 +1,470 @@
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
+import { LandingPageFormData, SalesPageContent, Benefit, Testimonial } from "@/types/landing-page";
+import { 
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Palette, Layout, Star, MessageSquare, DollarSign, Upload, Image, Video, X } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
+interface SalesEditorSidebarProps {
+  formData: LandingPageFormData;
+  onChange: (data: Partial<LandingPageFormData>) => void;
+}
+
+const SalesEditorSidebar = ({ formData, onChange }: SalesEditorSidebarProps) => {
+  const [uploadingAvatar, setUploadingAvatar] = useState<number | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  const content: SalesPageContent = formData.content;
+
+  const updateContent = (updates: Partial<SalesPageContent>) => {
+    onChange({ content: { ...content, ...updates } });
+  };
+
+  const updateBenefit = (index: number, updates: Partial<Benefit>) => {
+    const newBenefits = [...content.benefits];
+    newBenefits[index] = { ...newBenefits[index], ...updates };
+    updateContent({ benefits: newBenefits });
+  };
+
+  const updateTestimonial = (index: number, updates: Partial<Testimonial>) => {
+    const newTestimonials = [...content.testimonials];
+    newTestimonials[index] = { ...newTestimonials[index], ...updates };
+    updateContent({ testimonials: newTestimonials });
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      const filePath = `products/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('uploads')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('uploads')
+        .getPublicUrl(filePath);
+
+      onChange({ image_url: data.publicUrl });
+      toast.success("Imagem enviada com sucesso!");
+    } catch (error) {
+      console.error('Error uploading:', error);
+      toast.error("Erro ao enviar imagem");
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingAvatar(index);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `avatar_${Date.now()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('uploads')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('uploads')
+        .getPublicUrl(filePath);
+
+      updateTestimonial(index, { avatarUrl: data.publicUrl });
+      toast.success("Avatar enviado!");
+    } catch (error) {
+      console.error('Error uploading:', error);
+      toast.error("Erro ao enviar avatar");
+    } finally {
+      setUploadingAvatar(null);
+    }
+  };
+
+  return (
+    <aside className="w-full lg:w-80 bg-white border-r border-gray-200 overflow-y-auto h-full">
+      <div className="p-4 border-b border-gray-200">
+        <h2 className="font-semibold text-gray-900">Editor de Página de Vendas</h2>
+        <p className="text-sm text-gray-500">Personalize sua página</p>
+      </div>
+
+      <Accordion type="multiple" defaultValue={["appearance", "hero", "benefits"]} className="w-full">
+        {/* Appearance */}
+        <AccordionItem value="appearance">
+          <AccordionTrigger className="px-4 py-3 hover:bg-gray-50">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Palette className="w-4 h-4 text-primary" />
+              Aparência
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4 space-y-4">
+            <div className="space-y-2">
+              <Label className="text-xs text-gray-600">Nome da Página</Label>
+              <Input
+                value={formData.page_name}
+                onChange={(e) => onChange({ page_name: e.target.value })}
+                placeholder="Minha Página de Vendas"
+                className="text-sm"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label className="text-xs text-gray-600">Cor da Marca</Label>
+              <div className="flex gap-2">
+                <input
+                  type="color"
+                  value={formData.primary_color}
+                  onChange={(e) => onChange({ primary_color: e.target.value })}
+                  className="w-10 h-10 rounded cursor-pointer border-0"
+                />
+                <Input
+                  value={formData.primary_color}
+                  onChange={(e) => onChange({ primary_color: e.target.value })}
+                  className="text-sm flex-1"
+                />
+              </div>
+              <p className="text-xs text-gray-500">Essa cor pintará botões, ícones e destaques</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs text-gray-600">Cor de Fundo</Label>
+              <div className="flex gap-2">
+                <input
+                  type="color"
+                  value={formData.colors.background}
+                  onChange={(e) => onChange({ 
+                    colors: { ...formData.colors, background: e.target.value } 
+                  })}
+                  className="w-10 h-10 rounded cursor-pointer border-0"
+                />
+                <Input
+                  value={formData.colors.background}
+                  onChange={(e) => onChange({ 
+                    colors: { ...formData.colors, background: e.target.value } 
+                  })}
+                  className="text-sm flex-1"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs text-gray-600">Cor do Texto</Label>
+              <div className="flex gap-2">
+                <input
+                  type="color"
+                  value={formData.colors.text}
+                  onChange={(e) => onChange({ 
+                    colors: { ...formData.colors, text: e.target.value } 
+                  })}
+                  className="w-10 h-10 rounded cursor-pointer border-0"
+                />
+                <Input
+                  value={formData.colors.text}
+                  onChange={(e) => onChange({ 
+                    colors: { ...formData.colors, text: e.target.value } 
+                  })}
+                  className="text-sm flex-1"
+                />
+              </div>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* Hero Section */}
+        <AccordionItem value="hero">
+          <AccordionTrigger className="px-4 py-3 hover:bg-gray-50">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Layout className="w-4 h-4 text-primary" />
+              Topo (Hero)
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4 space-y-4">
+            <div className="space-y-2">
+              <Label className="text-xs text-gray-600">Headline Principal</Label>
+              <Textarea
+                value={formData.headline}
+                onChange={(e) => onChange({ headline: e.target.value })}
+                placeholder="Transforme sua vida hoje mesmo"
+                className="text-sm resize-none"
+                rows={2}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs text-gray-600">Subheadline</Label>
+              <Textarea
+                value={formData.subheadline}
+                onChange={(e) => onChange({ subheadline: e.target.value })}
+                placeholder="Descubra o método que já ajudou milhares..."
+                className="text-sm resize-none"
+                rows={2}
+              />
+            </div>
+
+            <div className="space-y-3">
+              <Label className="text-xs text-gray-600">Mídia Principal</Label>
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Image className="w-4 h-4 text-gray-500" />
+                  <span className="text-sm">Imagem</span>
+                </div>
+                <Switch
+                  checked={content.heroMediaType === 'video'}
+                  onCheckedChange={(checked) => updateContent({ 
+                    heroMediaType: checked ? 'video' : 'image' 
+                  })}
+                />
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">Vídeo</span>
+                  <Video className="w-4 h-4 text-gray-500" />
+                </div>
+              </div>
+
+              {content.heroMediaType === 'video' ? (
+                <div className="space-y-2">
+                  <Label className="text-xs text-gray-600">URL do Vídeo (YouTube/Vimeo)</Label>
+                  <Input
+                    value={formData.video_url}
+                    onChange={(e) => onChange({ video_url: e.target.value })}
+                    placeholder="https://youtube.com/watch?v=..."
+                    className="text-sm"
+                  />
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label className="text-xs text-gray-600">Imagem do Produto</Label>
+                  {formData.image_url ? (
+                    <div className="relative">
+                      <img 
+                        src={formData.image_url} 
+                        alt="Preview" 
+                        className="w-full h-32 object-cover rounded-lg"
+                      />
+                      <button
+                        onClick={() => onChange({ image_url: '' })}
+                        className="absolute top-2 right-2 p-1 bg-black/50 rounded-full text-white hover:bg-black/70"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center h-24 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                      <Upload className="w-6 h-6 text-gray-400 mb-1" />
+                      <span className="text-xs text-gray-500">
+                        {uploadingImage ? 'Enviando...' : 'Clique para enviar'}
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                        disabled={uploadingImage}
+                      />
+                    </label>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs text-gray-600">Texto do Botão</Label>
+              <Input
+                value={formData.cta_text}
+                onChange={(e) => onChange({ cta_text: e.target.value })}
+                placeholder="QUERO AGORA"
+                className="text-sm"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs text-gray-600">Link do Botão</Label>
+              <Input
+                value={formData.cta_url}
+                onChange={(e) => onChange({ cta_url: e.target.value })}
+                placeholder="https://..."
+                className="text-sm"
+              />
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* Benefits */}
+        <AccordionItem value="benefits">
+          <AccordionTrigger className="px-4 py-3 hover:bg-gray-50">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Star className="w-4 h-4 text-primary" />
+              Benefícios
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4 space-y-4">
+            {content.benefits.map((benefit, index) => (
+              <div key={index} className="p-3 bg-gray-50 rounded-lg space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-medium text-gray-700">
+                    Benefício {index + 1}
+                  </Label>
+                  <Input
+                    value={benefit.emoji}
+                    onChange={(e) => updateBenefit(index, { emoji: e.target.value })}
+                    placeholder="✨"
+                    className="w-14 text-center text-lg"
+                  />
+                </div>
+                <Input
+                  value={benefit.title}
+                  onChange={(e) => updateBenefit(index, { title: e.target.value })}
+                  placeholder="Título do benefício"
+                  className="text-sm"
+                />
+                <Textarea
+                  value={benefit.description}
+                  onChange={(e) => updateBenefit(index, { description: e.target.value })}
+                  placeholder="Descrição breve..."
+                  className="text-sm resize-none"
+                  rows={2}
+                />
+              </div>
+            ))}
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* Testimonials */}
+        <AccordionItem value="testimonials">
+          <AccordionTrigger className="px-4 py-3 hover:bg-gray-50">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <MessageSquare className="w-4 h-4 text-primary" />
+              Prova Social
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4 space-y-4">
+            {content.testimonials.map((testimonial, index) => (
+              <div key={index} className="p-3 bg-gray-50 rounded-lg space-y-3">
+                <Label className="text-xs font-medium text-gray-700">
+                  Depoimento {index + 1}
+                </Label>
+                
+                <div className="flex items-center gap-3">
+                  {testimonial.avatarUrl ? (
+                    <div className="relative">
+                      <img 
+                        src={testimonial.avatarUrl} 
+                        alt="Avatar"
+                        className="w-12 h-12 rounded-full object-cover"
+                      />
+                      <button
+                        onClick={() => updateTestimonial(index, { avatarUrl: '' })}
+                        className="absolute -top-1 -right-1 p-0.5 bg-red-500 rounded-full text-white"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center cursor-pointer hover:bg-gray-300">
+                      {uploadingAvatar === index ? (
+                        <div className="animate-spin w-4 h-4 border-2 border-primary border-t-transparent rounded-full" />
+                      ) : (
+                        <Upload className="w-4 h-4 text-gray-500" />
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleAvatarUpload(e, index)}
+                        className="hidden"
+                        disabled={uploadingAvatar !== null}
+                      />
+                    </label>
+                  )}
+                  <Input
+                    value={testimonial.name}
+                    onChange={(e) => updateTestimonial(index, { name: e.target.value })}
+                    placeholder="Nome do cliente"
+                    className="text-sm flex-1"
+                  />
+                </div>
+                
+                <Textarea
+                  value={testimonial.text}
+                  onChange={(e) => updateTestimonial(index, { text: e.target.value })}
+                  placeholder="O que o cliente disse..."
+                  className="text-sm resize-none"
+                  rows={3}
+                />
+              </div>
+            ))}
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* Pricing */}
+        <AccordionItem value="pricing">
+          <AccordionTrigger className="px-4 py-3 hover:bg-gray-50">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <DollarSign className="w-4 h-4 text-primary" />
+              Oferta Final
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4 space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label className="text-xs text-gray-600">Preço DE (riscado)</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">R$</span>
+                  <Input
+                    value={content.priceFrom}
+                    onChange={(e) => updateContent({ priceFrom: e.target.value })}
+                    placeholder="197"
+                    className="text-sm pl-9"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs text-gray-600">Preço POR (destaque)</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">R$</span>
+                  <Input
+                    value={content.priceTo}
+                    onChange={(e) => updateContent({ priceTo: e.target.value })}
+                    placeholder="97"
+                    className="text-sm pl-9"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs text-gray-600">Texto da Garantia</Label>
+              <Input
+                value={content.guaranteeText}
+                onChange={(e) => updateContent({ guaranteeText: e.target.value })}
+                placeholder="7 dias de garantia incondicional"
+                className="text-sm"
+              />
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+    </aside>
+  );
+};
+
+export default SalesEditorSidebar;

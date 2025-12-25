@@ -7,6 +7,7 @@ export interface LandingPageColors {
 }
 
 export type PageTheme = 'dark' | 'light' | 'modern-gray';
+export type TemplateType = 'vsl' | 'sales';
 
 export const pageThemes: Record<PageTheme, { name: string; colors: LandingPageColors }> = {
   dark: {
@@ -41,11 +42,51 @@ export const pageThemes: Record<PageTheme, { name: string; colors: LandingPageCo
   }
 };
 
+// Sales Page specific types
+export interface Benefit {
+  title: string;
+  description: string;
+  emoji: string;
+}
+
+export interface Testimonial {
+  name: string;
+  text: string;
+  avatarUrl: string;
+}
+
+export interface SalesPageContent {
+  heroMediaType: 'video' | 'image';
+  benefits: Benefit[];
+  testimonials: Testimonial[];
+  priceFrom: string;
+  priceTo: string;
+  guaranteeText: string;
+}
+
+export const defaultSalesContent: SalesPageContent = {
+  heroMediaType: 'image',
+  benefits: [
+    { title: 'Resultado Garantido', description: 'Transformação real em poucos dias', emoji: '✨' },
+    { title: 'Suporte 24h', description: 'Equipe pronta para ajudar', emoji: '💬' },
+    { title: 'Bônus Exclusivos', description: 'Materiais extras inclusos', emoji: '🎁' }
+  ],
+  testimonials: [
+    { name: 'Maria Silva', text: 'Mudou completamente minha vida! Recomendo a todos.', avatarUrl: '' },
+    { name: 'João Santos', text: 'Melhor investimento que já fiz. Vale cada centavo!', avatarUrl: '' },
+    { name: 'Ana Costa', text: 'Resultados incríveis em pouco tempo. Estou muito feliz!', avatarUrl: '' }
+  ],
+  priceFrom: '197',
+  priceTo: '97',
+  guaranteeText: '7 dias de garantia incondicional'
+};
+
 export interface LandingPage {
   id: string;
   user_id: string;
   slug: string;
   template_id: number;
+  template_type: TemplateType;
   page_name: string | null;
   profile_image_url: string | null;
   headline: string | null;
@@ -58,6 +99,8 @@ export interface LandingPage {
   whatsapp_number: string | null;
   pix_pixel_id: string | null;
   colors: LandingPageColors;
+  primary_color: string;
+  content: SalesPageContent | null;
   is_published: boolean;
   views: number;
   created_at: string;
@@ -67,6 +110,7 @@ export interface LandingPage {
 export interface LandingPageFormData {
   slug: string;
   template_id: number;
+  template_type: TemplateType;
   page_name: string;
   profile_image_url: string;
   headline: string;
@@ -86,12 +130,15 @@ export interface LandingPageFormData {
   whatsapp_number: string;
   pix_pixel_id: string;
   colors: LandingPageColors;
+  primary_color: string;
+  content: SalesPageContent;
   theme: PageTheme;
 }
 
 export const defaultFormData: LandingPageFormData = {
   slug: '',
   template_id: 1,
+  template_type: 'vsl',
   page_name: '',
   profile_image_url: '',
   headline: 'Descubra o Segredo Para Transformar Sua Vida',
@@ -117,6 +164,8 @@ export const defaultFormData: LandingPageFormData = {
     buttonBg: '#22C55E',
     buttonText: '#FFFFFF'
   },
+  primary_color: '#8B5CF6',
+  content: defaultSalesContent,
   theme: 'dark'
 };
 
