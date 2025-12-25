@@ -12,6 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import PricingModal from "@/components/PricingModal";
 
 interface UserProfile {
   id: string;
@@ -36,6 +37,7 @@ const SettingsPage = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [resettingPassword, setResettingPassword] = useState(false);
+  const [showPricingModal, setShowPricingModal] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -347,7 +349,10 @@ const SettingsPage = () => {
                         </div>
                         <Progress value={trialProgress} className="h-2" />
                       </div>
-                      <Button className="gradient-button text-primary-foreground border-0 w-full sm:w-auto">
+                      <Button 
+                        className="gradient-button text-primary-foreground border-0 w-full sm:w-auto"
+                        onClick={() => setShowPricingModal(true)}
+                      >
                         Fazer Upgrade Agora
                       </Button>
                     </div>
@@ -462,6 +467,7 @@ const SettingsPage = () => {
           </TabsContent>
         </Tabs>
       </main>
+      <PricingModal open={showPricingModal} onOpenChange={setShowPricingModal} />
     </DashboardLayout>
   );
 };
