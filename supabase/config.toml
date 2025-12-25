@@ -2,3 +2,6 @@ project_id = "myqrydgbrxhrjkrvkgqq"
 
 [functions.send-contact-email]
 verify_jwt = false
+
+[functions.asaas-checkout]
+verify_jwt = false

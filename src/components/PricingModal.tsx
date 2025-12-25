@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -6,20 +7,63 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
-import { Crown, Check, Zap, Star, Sparkles } from "lucide-react";
+import { Crown, Check, Zap, Star, Sparkles, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PricingModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   isTrialExpired?: boolean;
+  userFullName?: string | null;
 }
 
-const PricingModal = ({ open, onOpenChange, isTrialExpired = false }: PricingModalProps) => {
-  const handleSubscribe = (planName: string) => {
-    toast.info("Integração de pagamento será configurada em breve", {
-      description: `Plano ${planName} selecionado. Aguarde a integração.`,
-    });
+const PricingModal = ({ open, onOpenChange, isTrialExpired = false, userFullName }: PricingModalProps) => {
+  const { user } = useAuth();
+  const [loadingPlan, setLoadingPlan] = useState<'essential' | 'pro' | null>(null);
+
+  const handleSubscribe = async (planType: 'essential' | 'pro') => {
+    if (!user) {
+      toast.error("Você precisa estar logado para assinar");
+      return;
+    }
+
+    setLoadingPlan(planType);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('asaas-checkout', {
+        body: {
+          user_id: user.id,
+          email: user.email,
+          full_name: userFullName || user.email?.split('@')[0] || 'Cliente',
+          plan_type: planType,
+        },
+      });
+
+      if (error) {
+        console.error('Error calling asaas-checkout:', error);
+        throw new Error(error.message || 'Erro ao processar pagamento');
+      }
+
+      if (!data?.success) {
+        throw new Error(data?.error || 'Erro ao criar assinatura');
+      }
+
+      if (data.invoiceUrl) {
+        toast.success("Redirecionando para pagamento...");
+        window.location.href = data.invoiceUrl;
+      } else {
+        throw new Error('Link de pagamento não disponível');
+      }
+    } catch (error) {
+      console.error('Subscription error:', error);
+      toast.error("Erro ao processar assinatura", {
+        description: error instanceof Error ? error.message : "Tente novamente mais tarde",
+      });
+    } finally {
+      setLoadingPlan(null);
+    }
   };
 
   const essentialFeatures = [
@@ -84,9 +128,17 @@ const PricingModal = ({ open, onOpenChange, isTrialExpired = false }: PricingMod
               <Button 
                 variant="outline" 
                 className="w-full"
-                onClick={() => handleSubscribe("Essencial")}
+                onClick={() => handleSubscribe("essential")}
+                disabled={loadingPlan !== null}
               >
-                Assinar Essencial
+                {loadingPlan === 'essential' ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Processando...
+                  </>
+                ) : (
+                  'Assinar Essencial'
+                )}
               </Button>
             </CardContent>
           </Card>
@@ -131,10 +183,20 @@ const PricingModal = ({ open, onOpenChange, isTrialExpired = false }: PricingMod
               <Button 
                 variant="gradient" 
                 className="w-full"
-                onClick={() => handleSubscribe("PRO")}
+                onClick={() => handleSubscribe("pro")}
+                disabled={loadingPlan !== null}
               >
-                <Zap className="w-4 h-4 mr-2" />
-                Quero ser PRO
+                {loadingPlan === 'pro' ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Processando...
+                  </>
+                ) : (
+                  <>
+                    <Zap className="w-4 h-4 mr-2" />
+                    Quero ser PRO
+                  </>
+                )}
               </Button>
             </CardContent>
           </Card>
@@ -145,6 +207,7 @@ const PricingModal = ({ open, onOpenChange, isTrialExpired = false }: PricingMod
             variant="ghost" 
             onClick={() => onOpenChange(false)}
             className="text-muted-foreground text-sm"
+            disabled={loadingPlan !== null}
           >
             Voltar
           </Button>

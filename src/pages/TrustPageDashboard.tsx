@@ -336,7 +336,12 @@ const TrustPageDashboard = () => {
         )}
       </main>
 
-      <PricingModal open={showUpgradeModal} onOpenChange={setShowUpgradeModal} isTrialExpired={isTrialExpired} />
+      <PricingModal 
+        open={showUpgradeModal} 
+        onOpenChange={setShowUpgradeModal} 
+        isTrialExpired={isTrialExpired}
+        userFullName={profile?.full_name}
+      />
       
       <TemplateSelectionModal 
         open={showTemplateModal} 
