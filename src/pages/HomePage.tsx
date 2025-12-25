@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Play, Video, CreditCard, Zap, ArrowRight, CheckCircle2, Sparkles, Check, Clock, Menu, X } from "lucide-react";
 import { useState } from "react";
+import FAQSection from "@/components/FAQSection";
 
 const HomePage = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -419,6 +420,9 @@ const HomePage = () => {
           </div>
         </div>
       </section>
+
+      {/* FAQ Section */}
+      <FAQSection />
 
       {/* CTA Section */}
       <section className="py-16 sm:py-24 mesh-gradient relative overflow-hidden">

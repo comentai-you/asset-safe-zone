@@ -1,16 +1,31 @@
-import { useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useParams, useSearchParams, useLocation } from "react-router-dom";
+import { useEffect, useState, useMemo } from "react";
 import { LandingPageFormData, defaultFormData, LandingPageColors } from "@/types/landing-page";
 import HighConversionTemplate from "@/components/trustpage/templates/HighConversionTemplate";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import AdsViolationBar from "@/components/AdsViolationBar";
 
 const LandingPageView = () => {
   const { slug } = useParams<{ slug: string }>();
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
   const [pageData, setPageData] = useState<LandingPageFormData | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [ownerPlan, setOwnerPlan] = useState<string | null>(null);
+
+  // Detect if user came from paid ads (fbclid, gclid, utm_source=ads)
+  const isFromPaidAds = useMemo(() => {
+    const hasFbclid = searchParams.has('fbclid');
+    const hasGclid = searchParams.has('gclid');
+    const hasUtmAds = searchParams.get('utm_source') === 'ads';
+    return hasFbclid || hasGclid || hasUtmAds;
+  }, [searchParams]);
+
+  // Show violation bar if from paid ads AND owner is on essential/trial plan
+  const showViolationBar = isFromPaidAds && (ownerPlan === 'essential' || ownerPlan === 'trial');
 
   useEffect(() => {
     const fetchPage = async () => {
@@ -37,6 +52,22 @@ const LandingPageView = () => {
           setNotFound(true);
           setLoading(false);
           return;
+        }
+
+        // Fetch owner's plan type to check ads violation
+        const { data: ownerProfile } = await supabase
+          .from("profiles")
+          .select("plan_type, subscription_status")
+          .eq("id", page.user_id)
+          .maybeSingle();
+        
+        if (ownerProfile) {
+          // If trial, treat as essential for ads detection
+          if (ownerProfile.subscription_status === 'trial') {
+            setOwnerPlan('trial');
+          } else {
+            setOwnerPlan(ownerProfile.plan_type || 'essential');
+          }
         }
 
         // Increment view counter (fire and forget - don't block page load)
@@ -115,7 +146,10 @@ const LandingPageView = () => {
 
   return (
     <div className="min-h-screen">
-      <HighConversionTemplate data={pageData} />
+      {showViolationBar && <AdsViolationBar />}
+      <div className={showViolationBar ? "pt-[100px] sm:pt-[80px]" : ""}>
+        <HighConversionTemplate data={pageData} />
+      </div>
     </div>
   );
 };

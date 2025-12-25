@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import UpgradeModal from "@/components/UpgradeModal";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 interface LandingPage {
   id: string;
@@ -32,6 +33,7 @@ const TrustPageDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; id: string; name: string }>({ open: false, id: '', name: '' });
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -100,8 +102,13 @@ const TrustPageDashboard = () => {
   };
 
   const handleDelete = async (id: string, pageName: string) => {
-    if (!confirm(`Tem certeza que deseja excluir "${pageName || 'esta página'}"?`)) return;
+    setDeleteDialog({ open: true, id, name: pageName || 'esta página' });
+  };
 
+  const confirmDelete = async () => {
+    const { id } = deleteDialog;
+    setDeleteDialog({ open: false, id: '', name: '' });
+    
     try {
       const { error } = await supabase
         .from("landing_pages")
@@ -394,6 +401,17 @@ const TrustPageDashboard = () => {
       </main>
 
       <UpgradeModal open={showUpgradeModal} onOpenChange={setShowUpgradeModal} />
+      
+      <ConfirmDialog
+        open={deleteDialog.open}
+        onOpenChange={(open) => setDeleteDialog({ ...deleteDialog, open })}
+        title="Excluir página"
+        description={`Tem certeza que deseja excluir "${deleteDialog.name}"? Esta ação não pode ser desfeita.`}
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        onConfirm={confirmDelete}
+        variant="destructive"
+      />
     </div>
   );
 };
