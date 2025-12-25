@@ -61,7 +61,8 @@ const HighConversionTemplate = ({ data }: HighConversionTemplateProps) => {
     }
   };
 
-  const headlineSize = data.headline_size || 2;
+  const headlineSizeMobile = data.headline_size_mobile || 1.5;
+  const headlineSizeDesktop = data.headline_size_desktop || 2.5;
 
   return (
     <main
@@ -93,11 +94,23 @@ const HighConversionTemplate = ({ data }: HighConversionTemplateProps) => {
         
         {/* Headline */}
         <div className="pt-4 sm:pt-6 pb-1 sm:pb-2">
+          {/* Mobile headline */}
           <h1 
-            className="font-extrabold leading-tight text-center uppercase tracking-wide"
+            className="sm:hidden font-extrabold leading-tight text-center uppercase tracking-wide"
             style={{ 
               color: data.colors.text,
-              fontSize: `clamp(1rem, ${headlineSize * 0.7}rem, ${headlineSize}rem)`,
+              fontSize: `${headlineSizeMobile}rem`,
+              lineHeight: 1.1
+            }}
+          >
+            {data.headline || 'Seu Título Aqui'}
+          </h1>
+          {/* Desktop headline */}
+          <h1 
+            className="hidden sm:block font-extrabold leading-tight text-center uppercase tracking-wide"
+            style={{ 
+              color: data.colors.text,
+              fontSize: `${headlineSizeDesktop}rem`,
               lineHeight: 1.1
             }}
           >

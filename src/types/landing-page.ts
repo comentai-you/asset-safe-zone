@@ -71,6 +71,8 @@ export interface LandingPageFormData {
   profile_image_url: string;
   headline: string;
   headline_size: number;
+  headline_size_mobile: number;
+  headline_size_desktop: number;
   subheadline: string;
   video_url: string;
   video_storage_path: string;
@@ -92,6 +94,8 @@ export const defaultFormData: LandingPageFormData = {
   profile_image_url: '',
   headline: 'Descubra o Segredo Para Transformar Sua Vida',
   headline_size: 2,
+  headline_size_mobile: 1.5,
+  headline_size_desktop: 2.5,
   subheadline: '',
   video_url: '',
   video_storage_path: '',
