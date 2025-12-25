@@ -22,15 +22,18 @@ const PerfilTab = ({ formData, onChange }: PerfilTabProps) => {
 
       {/* Business Name */}
       <div className="space-y-2">
-        <Label htmlFor="page_name">Nome do Negócio</Label>
+        <Label htmlFor="page_name">
+          Nome do Negócio <span className="text-destructive">*</span>
+        </Label>
         <Input
           id="page_name"
           placeholder="Ex: Método Emagrecer Rápido"
           value={formData.page_name}
           onChange={(e) => onChange({ page_name: e.target.value })}
+          required
         />
         <p className="text-xs text-muted-foreground">
-          Aparece abaixo da foto de perfil
+          Aparece abaixo da foto de perfil. Cada página terá uma URL única.
         </p>
       </div>
     </div>

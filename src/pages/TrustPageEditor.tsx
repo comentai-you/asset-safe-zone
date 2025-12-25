@@ -108,14 +108,18 @@ const TrustPageEditor = () => {
   ];
 
   const generateSlug = (name: string): string => {
-    return name
+    const baseSlug = name
       .toLowerCase()
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
       .replace(/[^a-z0-9\s-]/g, "")
       .replace(/\s+/g, "-")
       .replace(/-+/g, "-")
-      .substring(0, 50);
+      .substring(0, 40);
+
+    // Append random suffix for uniqueness
+    const randomSuffix = Math.random().toString(36).substring(2, 8);
+    return `${baseSlug}-${randomSuffix}`;
   };
 
   const isReservedSlug = (slug: string): boolean => {
