@@ -1,14 +1,18 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { LandingPageFormData } from "@/types/landing-page";
 import { Play, Maximize2, Minimize2 } from "lucide-react";
+
+// Extend Window interface for YouTube API
+declare global {
+  interface Window {
+    YT: any;
+    onYouTubeIframeAPIReady: () => void;
+  }
+}
 
 interface HighConversionTemplateProps {
   data: LandingPageFormData;
   isMobile?: boolean;
-  /**
-   * Quando true, o template ocupa pelo menos a altura do viewport (página real).
-   * Quando false, ocupa apenas a altura do container pai (mockups do editor).
-   */
   fullHeight?: boolean;
 }
 
@@ -20,9 +24,151 @@ const HighConversionTemplate = ({
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [timeLeft, setTimeLeft] = useState({ minutes: 14, seconds: 59 });
-  const [videoProgress, setVideoProgress] = useState(0);
   const [showCta, setShowCta] = useState(!data.cta_delay_enabled);
+  const [videoDuration, setVideoDuration] = useState<number | null>(null);
   const videoContainerRef = useRef<HTMLDivElement>(null);
+  const playerRef = useRef<any>(null);
+  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  // Get video ID and type
+  const getVideoInfo = useCallback((url: string) => {
+    if (!url) return null;
+    
+    const youtubeMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([^&\s]+)/);
+    if (youtubeMatch) {
+      return { type: 'youtube', id: youtubeMatch[1] };
+    }
+    
+    const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+    if (vimeoMatch) {
+      return { type: 'vimeo', id: vimeoMatch[1] };
+    }
+    
+    return null;
+  }, []);
+
+  const videoInfo = getVideoInfo(data.video_url);
+
+  // Load YouTube IFrame API
+  useEffect(() => {
+    if (!isVideoPlaying || !data.cta_delay_enabled || videoInfo?.type !== 'youtube') return;
+
+    // Load YouTube API if not already loaded
+    if (!window.YT) {
+      const tag = document.createElement('script');
+      tag.src = 'https://www.youtube.com/iframe_api';
+      const firstScriptTag = document.getElementsByTagName('script')[0];
+      firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
+    }
+
+    const initPlayer = () => {
+      if (!iframeRef.current || playerRef.current) return;
+      
+      playerRef.current = new window.YT.Player(iframeRef.current, {
+        events: {
+          onReady: (event: any) => {
+            const duration = event.target.getDuration();
+            console.log(`YouTube video duration: ${duration} seconds`);
+            setVideoDuration(duration);
+          },
+          onStateChange: (event: any) => {
+            // YT.PlayerState.PLAYING = 1
+            if (event.data === 1) {
+              startProgressTracking();
+            }
+          }
+        }
+      });
+    };
+
+    if (window.YT && window.YT.Player) {
+      // Small delay to ensure iframe is mounted
+      setTimeout(initPlayer, 500);
+    } else {
+      window.onYouTubeIframeAPIReady = initPlayer;
+    }
+
+    return () => {
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+      }
+    };
+  }, [isVideoPlaying, data.cta_delay_enabled, videoInfo?.type]);
+
+  // For Vimeo - use postMessage API
+  useEffect(() => {
+    if (!isVideoPlaying || !data.cta_delay_enabled || videoInfo?.type !== 'vimeo') return;
+
+    const handleVimeoMessage = (event: MessageEvent) => {
+      if (event.origin !== 'https://player.vimeo.com') return;
+      
+      try {
+        const messageData = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+        
+        if (messageData.event === 'ready') {
+          // Request duration
+          iframeRef.current?.contentWindow?.postMessage(
+            JSON.stringify({ method: 'getDuration' }), 
+            '*'
+          );
+          // Request progress updates
+          iframeRef.current?.contentWindow?.postMessage(
+            JSON.stringify({ method: 'addEventListener', value: 'playProgress' }), 
+            '*'
+          );
+        }
+        
+        if (messageData.method === 'getDuration') {
+          console.log(`Vimeo video duration: ${messageData.value} seconds`);
+          setVideoDuration(messageData.value);
+        }
+        
+        if (messageData.event === 'playProgress' && messageData.data) {
+          const progress = messageData.data.percent * 100;
+          checkCtaVisibility(progress);
+        }
+      } catch (e) {}
+    };
+
+    window.addEventListener('message', handleVimeoMessage);
+    
+    // Send ready check after iframe loads
+    setTimeout(() => {
+      iframeRef.current?.contentWindow?.postMessage(
+        JSON.stringify({ method: 'addEventListener', value: 'ready' }), 
+        '*'
+      );
+    }, 1000);
+
+    return () => window.removeEventListener('message', handleVimeoMessage);
+  }, [isVideoPlaying, data.cta_delay_enabled, videoInfo?.type]);
+
+  const startProgressTracking = useCallback(() => {
+    if (progressIntervalRef.current) return;
+    
+    progressIntervalRef.current = setInterval(() => {
+      if (playerRef.current && playerRef.current.getCurrentTime && playerRef.current.getDuration) {
+        const currentTime = playerRef.current.getCurrentTime();
+        const duration = playerRef.current.getDuration();
+        if (duration > 0) {
+          const progress = (currentTime / duration) * 100;
+          checkCtaVisibility(progress);
+        }
+      }
+    }, 1000);
+  }, []);
+
+  const checkCtaVisibility = useCallback((progress: number) => {
+    const targetPercentage = data.cta_delay_percentage || 50;
+    if (progress >= targetPercentage && !showCta) {
+      console.log(`Video progress ${progress.toFixed(1)}% reached target ${targetPercentage}% - showing CTA`);
+      setShowCta(true);
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+      }
+    }
+  }, [data.cta_delay_percentage, showCta]);
 
   // Countdown timer
   useEffect(() => {
@@ -39,50 +185,33 @@ const HighConversionTemplate = ({
     return () => clearInterval(timer);
   }, []);
 
-  // Simulate video progress based on time (more reliable than postMessage API)
-  // Assumes an average video length of 3 minutes (180 seconds)
-  useEffect(() => {
-    if (!data.cta_delay_enabled || !isVideoPlaying) return;
-
-    const estimatedVideoDuration = 180; // 3 minutes in seconds
-    const targetPercentage = data.cta_delay_percentage || 50;
-    const targetTimeSeconds = (targetPercentage / 100) * estimatedVideoDuration;
-
-    console.log(`CTA will appear after ${targetTimeSeconds.toFixed(1)} seconds (${targetPercentage}% of estimated ${estimatedVideoDuration}s video)`);
-
-    const timer = setTimeout(() => {
-      console.log("CTA delay reached - showing button");
-      setShowCta(true);
-    }, targetTimeSeconds * 1000);
-
-    return () => clearTimeout(timer);
-  }, [data.cta_delay_enabled, data.cta_delay_percentage, isVideoPlaying]);
-
   // Update CTA visibility when delay is disabled
   useEffect(() => {
     if (!data.cta_delay_enabled) {
       setShowCta(true);
+    } else {
+      setShowCta(false);
     }
   }, [data.cta_delay_enabled]);
 
   const getVideoEmbedUrl = (url: string, autoplay = false) => {
     if (!url) return null;
     
-    // YouTube
+    // YouTube - add enablejsapi for API access
     const youtubeMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([^&\s]+)/);
     if (youtubeMatch) {
       const params = autoplay 
-        ? '?autoplay=1&controls=0&modestbranding=1&rel=0&showinfo=0&playsinline=1'
-        : '?rel=0&modestbranding=1';
+        ? `?autoplay=1&modestbranding=1&rel=0&showinfo=0&playsinline=1&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`
+        : `?rel=0&modestbranding=1&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`;
       return `https://www.youtube.com/embed/${youtubeMatch[1]}${params}`;
     }
     
-    // Vimeo
+    // Vimeo - add api=1 for API access
     const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
     if (vimeoMatch) {
       const params = autoplay
-        ? '?autoplay=1&title=0&byline=0&portrait=0'
-        : '?title=0&byline=0&portrait=0';
+        ? '?autoplay=1&title=0&byline=0&portrait=0&api=1'
+        : '?title=0&byline=0&portrait=0&api=1';
       return `https://player.vimeo.com/video/${vimeoMatch[1]}${params}`;
     }
     
@@ -186,6 +315,8 @@ const HighConversionTemplate = ({
                 className={`relative w-full rounded-lg overflow-hidden shadow-xl ${isFullscreen ? "bg-black" : "aspect-video"}`}
               >
                 <iframe
+                  ref={iframeRef}
+                  id="video-player"
                   src={embedUrl}
                   className={`w-full ${isFullscreen ? "h-screen" : "h-full absolute inset-0"}`}
                   allowFullScreen
