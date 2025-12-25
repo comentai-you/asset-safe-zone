@@ -98,6 +98,14 @@ const TrustPageEditor = () => {
     setFormData(prev => ({ ...prev, ...data }));
   };
 
+  // Lista de slugs reservados pelo sistema
+  const RESERVED_SLUGS = [
+    'admin', 'dashboard', 'login', 'auth', 'register', 'signup', 
+    'pricing', 'api', '404', 'suporte', 'ajuda', 'termos',
+    'settings', 'profile', 'user', 'users', 'pages', 'page',
+    'edit', 'new', 'create', 'delete', 'p', 'app'
+  ];
+
   const generateSlug = (name: string): string => {
     return name
       .toLowerCase()
@@ -107,6 +115,10 @@ const TrustPageEditor = () => {
       .replace(/\s+/g, "-")
       .replace(/-+/g, "-")
       .substring(0, 50);
+  };
+
+  const isReservedSlug = (slug: string): boolean => {
+    return RESERVED_SLUGS.includes(slug.toLowerCase().trim());
   };
 
   const handleSave = async () => {
@@ -132,6 +144,17 @@ const TrustPageEditor = () => {
 
     try {
       const slug = formData.slug || generateSlug(formData.page_name);
+      
+      // Validar se o slug é reservado
+      if (isReservedSlug(slug)) {
+        toast({
+          title: "Nome reservado",
+          description: "Este nome de página é reservado pelo sistema. Escolha outro.",
+          variant: "destructive",
+        });
+        setIsSaving(false);
+        return;
+      }
       
       const pageData = {
         user_id: user.id,
