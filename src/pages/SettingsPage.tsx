@@ -467,7 +467,11 @@ const SettingsPage = () => {
           </TabsContent>
         </Tabs>
       </main>
-      <PricingModal open={showPricingModal} onOpenChange={setShowPricingModal} />
+      <PricingModal 
+        open={showPricingModal} 
+        onOpenChange={setShowPricingModal}
+        userFullName={profile?.full_name}
+      />
     </DashboardLayout>
   );
 };
