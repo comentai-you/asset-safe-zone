@@ -11,6 +11,8 @@ import ConfirmDialog from "@/components/ConfirmDialog";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import StatsBar from "@/components/dashboard/StatsBar";
 import PageCard from "@/components/dashboard/PageCard";
+import TemplateSelectionModal from "@/components/TemplateSelectionModal";
+import { TemplateType } from "@/types/landing-page";
 
 interface LandingPage {
   id: string;
@@ -39,6 +41,7 @@ const TrustPageDashboard = () => {
   const [pages, setPages] = useState<LandingPage[]>([]);
   const [loading, setLoading] = useState(true);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; id: string; name: string }>({ open: false, id: '', name: '' });
   const { user } = useAuth();
@@ -143,8 +146,12 @@ const TrustPageDashboard = () => {
     if (hasReachedLimit) {
       setShowUpgradeModal(true);
     } else {
-      navigate("/new");
+      setShowTemplateModal(true);
     }
+  };
+
+  const handleTemplateSelect = (templateType: TemplateType) => {
+    navigate(`/new?type=${templateType}`);
   };
 
   const handleEdit = (pageId: string) => {
@@ -328,6 +335,12 @@ const TrustPageDashboard = () => {
       </main>
 
       <UpgradeModal open={showUpgradeModal} onOpenChange={setShowUpgradeModal} />
+      
+      <TemplateSelectionModal 
+        open={showTemplateModal} 
+        onOpenChange={setShowTemplateModal}
+        onSelect={handleTemplateSelect}
+      />
       
       <ConfirmDialog
         open={deleteDialog.open}

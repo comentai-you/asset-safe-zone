@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Save, Eye, Sparkles, Loader2, Settings2, Monitor, Smartphone } from "lucide-react";
-import { LandingPageFormData, defaultFormData } from "@/types/landing-page";
+import { ArrowLeft, Save, Eye, Sparkles, Loader2, Settings2, Monitor, Smartphone, ShoppingBag, Play } from "lucide-react";
+import { LandingPageFormData, defaultFormData, defaultSalesContent, SalesPageContent, TemplateType } from "@/types/landing-page";
 import EditorSidebar from "@/components/trustpage/editor/EditorSidebar";
+import SalesEditorSidebar from "@/components/trustpage/editor/SalesEditorSidebar";
 import IMacMockup from "@/components/trustpage/editor/IMacMockup";
 import IPhoneMockup from "@/components/trustpage/editor/IPhoneMockup";
 import MobileEditorControls from "@/components/trustpage/editor/MobileEditorControls";
@@ -20,8 +21,17 @@ import {
 
 const TrustPageEditor = () => {
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [formData, setFormData] = useState<LandingPageFormData>(defaultFormData);
+  
+  // Get template type from URL params for new pages
+  const templateTypeParam = searchParams.get('type') as TemplateType | null;
+  const initialFormData: LandingPageFormData = {
+    ...defaultFormData,
+    template_type: templateTypeParam || 'vsl',
+  };
+  
+  const [formData, setFormData] = useState<LandingPageFormData>(initialFormData);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(!!id);
   const [userPlan, setUserPlan] = useState<'essential' | 'elite'>('essential');
@@ -71,9 +81,13 @@ const TrustPageEditor = () => {
         }
 
         setExistingPageId(page.id);
+        const content = page.content as unknown as SalesPageContent || defaultSalesContent;
+        const templateType = (page.template_type as TemplateType) || 'vsl';
+        
         setFormData({
           slug: page.slug,
           template_id: page.template_id,
+          template_type: templateType,
           page_name: page.page_name || '',
           profile_image_url: page.profile_image_url || '',
           headline: page.headline || '',
@@ -93,6 +107,8 @@ const TrustPageEditor = () => {
           whatsapp_number: page.whatsapp_number || '',
           pix_pixel_id: page.pix_pixel_id || '',
           colors: (page.colors as unknown as LandingPageFormData['colors']) || defaultFormData.colors,
+          primary_color: page.primary_color || '#8B5CF6',
+          content,
           theme: 'dark',
         });
         setIsLoading(false);
@@ -199,6 +215,7 @@ const TrustPageEditor = () => {
         user_id: user.id,
         slug,
         template_id: formData.template_id,
+        template_type: formData.template_type,
         page_name: formData.page_name,
         profile_image_url: formData.profile_image_url || null,
         headline: formData.headline || null,
@@ -214,6 +231,8 @@ const TrustPageEditor = () => {
         whatsapp_number: formData.whatsapp_number || null,
         pix_pixel_id: formData.pix_pixel_id || null,
         colors: formData.colors as unknown as Json,
+        primary_color: formData.primary_color,
+        content: formData.content as unknown as Json,
         is_published: true,
       };
 
@@ -352,8 +371,14 @@ const TrustPageEditor = () => {
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary" />
-              <span className="font-semibold text-gray-900 hidden sm:inline">VSL Página</span>
+              {formData.template_type === 'sales' ? (
+                <ShoppingBag className="w-5 h-5 text-primary" />
+              ) : (
+                <Play className="w-5 h-5 text-primary" />
+              )}
+              <span className="font-semibold text-gray-900 hidden sm:inline">
+                {formData.template_type === 'sales' ? 'Página de Vendas' : 'VSL Página'}
+              </span>
             </div>
           </div>
           
@@ -401,7 +426,11 @@ const TrustPageEditor = () => {
       <div className="flex-1 flex">
         {/* Desktop Sidebar - Hidden on mobile */}
         <div className="hidden lg:block">
-          <EditorSidebar formData={formData} onChange={handleChange} />
+          {formData.template_type === 'sales' ? (
+            <SalesEditorSidebar formData={formData} onChange={handleChange} />
+          ) : (
+            <EditorSidebar formData={formData} onChange={handleChange} />
+          )}
         </div>
 
         {/* Main Area */}
@@ -430,9 +459,13 @@ const TrustPageEditor = () => {
             </button>
           </div>
 
-          {/* Mobile Form View - Uses same EditorSidebar as desktop */}
+          {/* Mobile Form View */}
           <div className={`lg:hidden flex-1 overflow-y-auto bg-white ${activeTab === 'form' ? 'block' : 'hidden'}`}>
-            <EditorSidebar formData={formData} onChange={handleChange} />
+            {formData.template_type === 'sales' ? (
+              <SalesEditorSidebar formData={formData} onChange={handleChange} />
+            ) : (
+              <EditorSidebar formData={formData} onChange={handleChange} />
+            )}
           </div>
 
           {/* Mobile Preview View */}

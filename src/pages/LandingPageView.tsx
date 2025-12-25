@@ -1,7 +1,8 @@
 import { useParams, useSearchParams, useLocation } from "react-router-dom";
 import { useEffect, useState, useMemo } from "react";
-import { LandingPageFormData, defaultFormData, LandingPageColors } from "@/types/landing-page";
+import { LandingPageFormData, defaultFormData, LandingPageColors, defaultSalesContent, SalesPageContent, TemplateType } from "@/types/landing-page";
 import HighConversionTemplate from "@/components/trustpage/templates/HighConversionTemplate";
+import SalesPageTemplate from "@/components/trustpage/templates/SalesPageTemplate";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -114,10 +115,13 @@ const LandingPageView = () => {
 
         // Map database data to form data format
         const colors = page.colors as unknown as LandingPageColors || defaultFormData.colors;
+        const content = page.content as unknown as SalesPageContent || defaultSalesContent;
+        const templateType = (page.template_type as TemplateType) || 'vsl';
         
         setPageData({
           slug: page.slug,
           template_id: page.template_id,
+          template_type: templateType,
           page_name: page.page_name || '',
           profile_image_url: page.profile_image_url || '',
           headline: page.headline || '',
@@ -137,6 +141,8 @@ const LandingPageView = () => {
           whatsapp_number: page.whatsapp_number || '',
           pix_pixel_id: page.pix_pixel_id || '',
           colors,
+          primary_color: page.primary_color || '#8B5CF6',
+          content,
           theme: 'dark',
         });
       } catch (error) {
@@ -185,7 +191,11 @@ const LandingPageView = () => {
     >
       {showViolationBar && <AdsViolationBar />}
       <div className={showViolationBar ? "pt-[100px] sm:pt-[80px]" : ""}>
-        <HighConversionTemplate data={pageData} isMobile={isMobile} />
+        {pageData.template_type === 'sales' ? (
+          <SalesPageTemplate data={pageData} isMobile={isMobile} />
+        ) : (
+          <HighConversionTemplate data={pageData} isMobile={isMobile} />
+        )}
       </div>
     </div>
   );
