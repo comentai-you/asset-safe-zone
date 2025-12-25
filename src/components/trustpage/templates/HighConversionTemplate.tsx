@@ -74,8 +74,8 @@ const HighConversionTemplate = ({ data }: HighConversionTemplateProps) => {
     >
       {/* Mobile-first container - max 480px on desktop */}
       <article className="mx-auto w-full max-w-[480px] min-h-screen flex flex-col">
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col">
+        {/* Main Content - No flex-1 to avoid excessive spacing */}
+        <div className="flex flex-col">
           {/* Profile Header */}
           <div className="flex flex-col items-center pt-6 pb-3 px-4">
             {data.profile_image_url ? (
@@ -112,7 +112,7 @@ const HighConversionTemplate = ({ data }: HighConversionTemplateProps) => {
             </h1>
           </div>
 
-          {/* Video with VSL Mask - Reduced gap */}
+          {/* Video with VSL Mask */}
           <div className="w-full">
             {isVideoPlaying && embedUrl ? (
               <div className="aspect-video w-full">
@@ -129,20 +129,18 @@ const HighConversionTemplate = ({ data }: HighConversionTemplateProps) => {
                 onClick={handlePlayClick}
               >
                 {/* Thumbnail - User uploaded takes priority */}
-                {thumbnail ? (
+                {thumbnail && (
                   <img 
                     src={thumbnail} 
                     alt="Video thumbnail"
-                    className="w-full h-full object-cover absolute inset-0"
-                    onError={(e) => {
-                      // Fallback if image fails to load
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                    }}
+                    className="w-full h-full object-cover absolute inset-0 z-0"
                   />
-                ) : (
+                )}
+                
+                {/* Fallback background if no thumbnail */}
+                {!thumbnail && (
                   <div 
-                    className="w-full h-full flex items-center justify-center absolute inset-0"
+                    className="w-full h-full absolute inset-0 z-0"
                     style={{ backgroundColor: `${data.colors.buttonBg}15` }}
                   />
                 )}
@@ -179,7 +177,7 @@ const HighConversionTemplate = ({ data }: HighConversionTemplateProps) => {
             )}
           </div>
 
-          {/* Description - Reduced padding */}
+          {/* Description */}
           {data.description && (
             <div className="px-4 py-3">
               <p className="text-sm leading-relaxed opacity-80 text-center">
