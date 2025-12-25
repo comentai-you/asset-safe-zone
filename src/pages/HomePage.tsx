@@ -461,9 +461,9 @@ const HomePage = () => {
             </div>
             
             <div className="flex items-center gap-4 sm:gap-6 text-xs sm:text-sm text-primary-foreground/70">
-              <a href="#" className="hover:text-primary-foreground transition-colors">Termos</a>
-              <a href="#" className="hover:text-primary-foreground transition-colors">Privacidade</a>
-              <a href="#" className="hover:text-primary-foreground transition-colors">Contato</a>
+              <Link to="/termos" className="hover:text-primary-foreground transition-colors">Termos</Link>
+              <Link to="/privacidade" className="hover:text-primary-foreground transition-colors">Privacidade</Link>
+              <Link to="/contato" className="hover:text-primary-foreground transition-colors">Contato</Link>
             </div>
             
             <p className="text-xs sm:text-sm text-primary-foreground/50">

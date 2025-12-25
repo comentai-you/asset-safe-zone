@@ -11,6 +11,9 @@ import HomePage from "./pages/HomePage";
 import TrustPageDashboard from "./pages/TrustPageDashboard";
 import TrustPageEditor from "./pages/TrustPageEditor";
 import LandingPageView from "./pages/LandingPageView";
+import TermsPage from "./pages/TermsPage";
+import PrivacyPage from "./pages/PrivacyPage";
+import ContactPage from "./pages/ContactPage";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +29,9 @@ const App = () => (
             <Route path="/" element={<HomePage />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/p/:slug" element={<LandingPageView />} />
+            <Route path="/termos" element={<TermsPage />} />
+            <Route path="/privacidade" element={<PrivacyPage />} />
+            <Route path="/contato" element={<ContactPage />} />
             
             {/* Protected Routes */}
             <Route path="/dashboard" element={
