@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,6 +15,7 @@ import { Palette, Layout, Star, MessageSquare, DollarSign, Upload, Image, Video,
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import IconSelector from "./IconSelector";
+import ThemeSelector, { salesThemes, SalesTheme } from "./ThemeSelector";
 
 interface SalesEditorSidebarProps {
   formData: LandingPageFormData;
@@ -26,6 +27,34 @@ const SalesEditorSidebar = ({ formData, onChange }: SalesEditorSidebarProps) => 
   const [uploadingImage, setUploadingImage] = useState(false);
 
   const content: SalesPageContent = formData.content;
+
+  // Determine current theme based on colors
+  const getCurrentThemeId = (): string => {
+    const currentBg = formData.colors.background.toLowerCase();
+    const matchedTheme = salesThemes.find(t => t.colors.background.toLowerCase() === currentBg);
+    return matchedTheme?.id || 'dark-conversion';
+  };
+
+  const [selectedThemeId, setSelectedThemeId] = useState<string>(getCurrentThemeId());
+
+  // Update selectedThemeId when formData changes (e.g., on load)
+  useEffect(() => {
+    setSelectedThemeId(getCurrentThemeId());
+  }, [formData.colors.background]);
+
+  const handleThemeSelect = (theme: SalesTheme) => {
+    setSelectedThemeId(theme.id);
+    onChange({
+      primary_color: theme.colors.primary,
+      colors: {
+        ...formData.colors,
+        background: theme.colors.background,
+        text: theme.colors.text,
+        buttonBg: theme.colors.primary,
+        buttonText: theme.colors.text === '#ffffff' || theme.colors.text === '#f8fafc' ? '#ffffff' : '#ffffff'
+      }
+    });
+  };
 
   const updateContent = (updates: Partial<SalesPageContent>) => {
     onChange({ content: { ...content, ...updates } });
@@ -180,63 +209,11 @@ const SalesEditorSidebar = ({ formData, onChange }: SalesEditorSidebarProps) => 
             </div>
             
             <div className="space-y-2">
-              <Label className="text-xs text-gray-600">Cor da Marca</Label>
-              <div className="flex gap-2">
-                <input
-                  type="color"
-                  value={formData.primary_color}
-                  onChange={(e) => onChange({ primary_color: e.target.value })}
-                  className="w-10 h-10 rounded cursor-pointer border-0"
-                />
-                <Input
-                  value={formData.primary_color}
-                  onChange={(e) => onChange({ primary_color: e.target.value })}
-                  className="text-sm flex-1"
-                />
-              </div>
-              <p className="text-xs text-gray-500">Essa cor pintará botões, ícones e destaques</p>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-xs text-gray-600">Cor de Fundo</Label>
-              <div className="flex gap-2">
-                <input
-                  type="color"
-                  value={formData.colors.background}
-                  onChange={(e) => onChange({ 
-                    colors: { ...formData.colors, background: e.target.value } 
-                  })}
-                  className="w-10 h-10 rounded cursor-pointer border-0"
-                />
-                <Input
-                  value={formData.colors.background}
-                  onChange={(e) => onChange({ 
-                    colors: { ...formData.colors, background: e.target.value } 
-                  })}
-                  className="text-sm flex-1"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-xs text-gray-600">Cor do Texto</Label>
-              <div className="flex gap-2">
-                <input
-                  type="color"
-                  value={formData.colors.text}
-                  onChange={(e) => onChange({ 
-                    colors: { ...formData.colors, text: e.target.value } 
-                  })}
-                  className="w-10 h-10 rounded cursor-pointer border-0"
-                />
-                <Input
-                  value={formData.colors.text}
-                  onChange={(e) => onChange({ 
-                    colors: { ...formData.colors, text: e.target.value } 
-                  })}
-                  className="text-sm flex-1"
-                />
-              </div>
+              <Label className="text-xs text-gray-600">Tema Profissional</Label>
+              <ThemeSelector
+                selectedThemeId={selectedThemeId}
+                onSelectTheme={handleThemeSelect}
+              />
             </div>
           </AccordionContent>
         </AccordionItem>

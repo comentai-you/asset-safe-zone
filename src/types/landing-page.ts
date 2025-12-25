@@ -163,11 +163,11 @@ export const defaultFormData: LandingPageFormData = {
   whatsapp_number: '',
   pix_pixel_id: '',
   colors: {
-    primary: '#22C55E',
-    background: '#000000',
-    text: '#FFFFFF',
-    buttonBg: '#22C55E',
-    buttonText: '#FFFFFF'
+    primary: '#22c55e',
+    background: '#09090b',
+    text: '#ffffff',
+    buttonBg: '#22c55e',
+    buttonText: '#ffffff'
   },
   primary_color: '#8B5CF6',
   content: defaultSalesContent,
