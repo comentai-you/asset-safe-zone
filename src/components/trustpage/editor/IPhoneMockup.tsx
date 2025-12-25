@@ -9,8 +9,29 @@ interface IPhoneMockupProps {
 
 const IPhoneMockup = ({ formData, size = 'normal' }: IPhoneMockupProps) => {
   const dimensions = size === 'large' 
-    ? { width: 'w-[340px]', height: 'h-[690px]', radius: 'rounded-[50px]', innerRadius: 'rounded-[42px]' }
-    : { width: 'w-[260px]', height: 'h-[530px]', radius: 'rounded-[40px]', innerRadius: 'rounded-[34px]' };
+    ? { 
+        width: 'w-[340px]', 
+        height: 'h-[690px]', 
+        radius: 'rounded-[50px]', 
+        innerRadius: 'rounded-[42px]',
+        // Content container dimensions for scaling
+        contentWidth: 320,
+        contentHeight: 650,
+        // Target viewport width for mobile (iPhone 14 Pro)
+        viewportWidth: 393,
+      }
+    : { 
+        width: 'w-[280px]', 
+        height: 'h-[570px]', 
+        radius: 'rounded-[44px]', 
+        innerRadius: 'rounded-[38px]',
+        contentWidth: 260,
+        contentHeight: 530,
+        viewportWidth: 393,
+      };
+
+  // Calculate scale to fit content properly
+  const scale = dimensions.contentWidth / dimensions.viewportWidth;
 
   const isSalesPage = formData.template_type === 'sales';
 
@@ -18,7 +39,7 @@ const IPhoneMockup = ({ formData, size = 'normal' }: IPhoneMockupProps) => {
     <div className="relative">
       {/* iPhone Frame */}
       <div 
-        className={`${dimensions.width} ${dimensions.height} bg-gradient-to-b from-zinc-700 to-black ${dimensions.radius} p-[10px] shadow-2xl`}
+        className={`${dimensions.width} ${dimensions.height} bg-gradient-to-b from-zinc-700 to-zinc-900 ${dimensions.radius} p-[10px] shadow-2xl`}
         style={{
           boxShadow: '0 30px 60px -15px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.1) inset'
         }}
@@ -44,18 +65,18 @@ const IPhoneMockup = ({ formData, size = 'normal' }: IPhoneMockupProps) => {
         >
           {/* Status Bar */}
           <div 
-            className="absolute top-0 left-0 right-0 h-10 flex items-end justify-between px-6 pb-1 text-[10px] font-semibold z-10" 
+            className="absolute top-0 left-0 right-0 h-8 flex items-end justify-between px-5 pb-1 text-[9px] font-semibold z-10" 
             style={{ color: formData.colors.text }}
           >
             <span>9:41</span>
             <div className="flex items-center gap-1">
               <div className="flex gap-[2px]">
-                <div className="w-[3px] h-[8px] rounded-sm" style={{ backgroundColor: formData.colors.text }} />
-                <div className="w-[3px] h-[10px] rounded-sm" style={{ backgroundColor: formData.colors.text }} />
-                <div className="w-[3px] h-[12px] rounded-sm" style={{ backgroundColor: formData.colors.text }} />
-                <div className="w-[3px] h-[14px] rounded-sm" style={{ backgroundColor: `${formData.colors.text}40` }} />
+                <div className="w-[2px] h-[6px] rounded-sm" style={{ backgroundColor: formData.colors.text }} />
+                <div className="w-[2px] h-[8px] rounded-sm" style={{ backgroundColor: formData.colors.text }} />
+                <div className="w-[2px] h-[10px] rounded-sm" style={{ backgroundColor: formData.colors.text }} />
+                <div className="w-[2px] h-[12px] rounded-sm" style={{ backgroundColor: `${formData.colors.text}40` }} />
               </div>
-              <svg className="w-5 h-2.5 ml-1" viewBox="0 0 24 12" fill={formData.colors.text}>
+              <svg className="w-4 h-2 ml-1" viewBox="0 0 24 12" fill={formData.colors.text}>
                 <rect x="0" y="0" width="21" height="12" rx="3" stroke={formData.colors.text} strokeWidth="1" fill="none"/>
                 <rect x="2" y="2" width="17" height="8" rx="1" fill={formData.colors.text}/>
                 <rect x="22" y="3" width="2" height="6" rx="1" fill={formData.colors.text}/>
@@ -63,9 +84,9 @@ const IPhoneMockup = ({ formData, size = 'normal' }: IPhoneMockupProps) => {
             </div>
           </div>
           
-          {/* Content - scrollable with hidden scrollbar, starts below status bar */}
+          {/* Content - scaled to fit properly */}
           <div 
-            className="absolute top-10 left-0 right-0 bottom-0 overflow-y-auto iphone-scroll"
+            className="absolute top-8 left-0 right-0 bottom-0 overflow-y-auto iphone-scroll"
             style={{
               scrollbarWidth: 'none',
               msOverflowStyle: 'none'
@@ -78,11 +99,20 @@ const IPhoneMockup = ({ formData, size = 'normal' }: IPhoneMockupProps) => {
                 }
               `}
             </style>
-            {isSalesPage ? (
-              <SalesPageTemplate data={formData} isMobile={true} />
-            ) : (
-              <HighConversionTemplate data={formData} isMobile={true} fullHeight={false} />
-            )}
+            {/* Scaled content container */}
+            <div 
+              style={{
+                width: `${dimensions.viewportWidth}px`,
+                transform: `scale(${scale})`,
+                transformOrigin: 'top left',
+              }}
+            >
+              {isSalesPage ? (
+                <SalesPageTemplate data={formData} isMobile={true} fullHeight={false} />
+              ) : (
+                <HighConversionTemplate data={formData} isMobile={true} fullHeight={false} />
+              )}
+            </div>
           </div>
         </div>
       </div>

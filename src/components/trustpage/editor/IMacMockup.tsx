@@ -8,6 +8,16 @@ interface IMacMockupProps {
 
 const IMacMockup = ({ formData }: IMacMockupProps) => {
   const isSalesPage = formData.template_type === 'sales';
+  
+  // Mockup screen dimensions
+  const screenWidth = 512;
+  const screenHeight = 306; // Accounting for browser chrome (24px)
+  
+  // Target viewport dimensions (typical desktop)
+  const viewportWidth = 1280;
+  
+  // Calculate scale
+  const scale = screenWidth / viewportWidth;
 
   return (
     <div className="relative">
@@ -37,9 +47,9 @@ const IMacMockup = ({ formData }: IMacMockupProps) => {
               </div>
             </div>
             
-            {/* Content - scrollable, hidden scrollbar */}
+            {/* Content - scaled to fit properly */}
             <div 
-              className="h-[calc(100%-24px)] overflow-y-auto imac-scroll"
+              className="h-[calc(100%-24px)] overflow-y-auto overflow-x-hidden imac-scroll"
               style={{
                 scrollbarWidth: 'none',
                 msOverflowStyle: 'none'
@@ -52,11 +62,20 @@ const IMacMockup = ({ formData }: IMacMockupProps) => {
                   }
                 `}
               </style>
-              {isSalesPage ? (
-                <SalesPageTemplate data={formData} isMobile={false} />
-              ) : (
-                <HighConversionTemplate data={formData} isMobile={false} fullHeight={false} />
-              )}
+              {/* Scaled content container */}
+              <div 
+                style={{
+                  width: `${viewportWidth}px`,
+                  transform: `scale(${scale})`,
+                  transformOrigin: 'top left',
+                }}
+              >
+                {isSalesPage ? (
+                  <SalesPageTemplate data={formData} isMobile={false} fullHeight={false} />
+                ) : (
+                  <HighConversionTemplate data={formData} isMobile={false} fullHeight={false} />
+                )}
+              </div>
             </div>
           </div>
         </div>
