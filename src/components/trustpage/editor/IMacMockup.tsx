@@ -1,6 +1,7 @@
 import { LandingPageFormData } from "@/types/landing-page";
 import HighConversionTemplate from "../templates/HighConversionTemplate";
 import SalesPageTemplate from "../templates/SalesPageTemplate";
+import ScaledViewport from "./ScaledViewport";
 
 interface IMacMockupProps {
   formData: LandingPageFormData;
@@ -62,20 +63,13 @@ const IMacMockup = ({ formData }: IMacMockupProps) => {
                   }
                 `}
               </style>
-              {/* Scaled content container */}
-              <div 
-                style={{
-                  width: `${viewportWidth}px`,
-                  transform: `scale(${scale})`,
-                  transformOrigin: 'top left',
-                }}
-              >
+              <ScaledViewport viewportWidth={viewportWidth} scale={scale}>
                 {isSalesPage ? (
                   <SalesPageTemplate data={formData} isMobile={false} fullHeight={false} />
                 ) : (
                   <HighConversionTemplate data={formData} isMobile={false} fullHeight={false} />
                 )}
-              </div>
+              </ScaledViewport>
             </div>
           </div>
         </div>

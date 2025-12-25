@@ -1,6 +1,7 @@
 import { LandingPageFormData } from "@/types/landing-page";
 import HighConversionTemplate from "../templates/HighConversionTemplate";
 import SalesPageTemplate from "../templates/SalesPageTemplate";
+import ScaledViewport from "./ScaledViewport";
 
 interface IPhoneMockupProps {
   formData: LandingPageFormData;
@@ -99,20 +100,13 @@ const IPhoneMockup = ({ formData, size = 'normal' }: IPhoneMockupProps) => {
                 }
               `}
             </style>
-            {/* Scaled content container */}
-            <div 
-              style={{
-                width: `${dimensions.viewportWidth}px`,
-                transform: `scale(${scale})`,
-                transformOrigin: 'top left',
-              }}
-            >
+            <ScaledViewport viewportWidth={dimensions.viewportWidth} scale={scale}>
               {isSalesPage ? (
                 <SalesPageTemplate data={formData} isMobile={true} fullHeight={false} />
               ) : (
                 <HighConversionTemplate data={formData} isMobile={true} fullHeight={false} />
               )}
-            </div>
+            </ScaledViewport>
           </div>
         </div>
       </div>
