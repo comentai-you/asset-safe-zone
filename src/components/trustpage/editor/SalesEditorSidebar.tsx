@@ -348,6 +348,21 @@ const SalesEditorSidebar = ({ formData, onChange }: SalesEditorSidebarProps) => 
 
             <div className="space-y-3">
               <Label className="text-xs text-gray-600">Mídia Principal</Label>
+              
+              {/* Pro tip about video */}
+              <div className="p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+                <div className="flex items-start gap-2">
+                  <span className="text-base">🎬</span>
+                  <div>
+                    <p className="text-xs font-semibold text-green-800">Dica de conversão</p>
+                    <p className="text-[11px] text-green-700 mt-0.5">
+                      Vídeos convertem até <span className="font-bold">3x mais</span> que imagens! 
+                      Prefira hospedar no <span className="font-bold">Vimeo</span> para uma experiência mais profissional e sem distrações.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center gap-2">
                   <Image className="w-4 h-4 text-gray-500" />
