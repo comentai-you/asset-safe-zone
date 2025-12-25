@@ -14,6 +14,7 @@ import {
 import { Palette, Layout, Star, MessageSquare, DollarSign, Upload, Image, Video, X, Loader2, HelpCircle, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 import IconSelector from "./IconSelector";
 import ThemeSelector, { salesThemes, SalesTheme } from "./ThemeSelector";
 
@@ -23,6 +24,7 @@ interface SalesEditorSidebarProps {
 }
 
 const SalesEditorSidebar = ({ formData, onChange }: SalesEditorSidebarProps) => {
+  const { user } = useAuth();
   const [uploadingAvatar, setUploadingAvatar] = useState<number | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
 
@@ -90,10 +92,14 @@ const SalesEditorSidebar = ({ formData, onChange }: SalesEditorSidebarProps) => 
 
     setUploadingImage(true);
     try {
+      if (!user) {
+        toast.error("Você precisa estar logado para fazer upload");
+        return;
+      }
       const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
       const uniqueId = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
       const fileName = `product_${uniqueId}.${fileExt}`;
-      const filePath = `products/${fileName}`;
+      const filePath = `${user.id}/products/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('uploads')
@@ -145,10 +151,14 @@ const SalesEditorSidebar = ({ formData, onChange }: SalesEditorSidebarProps) => 
 
     setUploadingAvatar(index);
     try {
+      if (!user) {
+        toast.error("Você precisa estar logado para fazer upload");
+        return;
+      }
       const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
       const uniqueId = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
       const fileName = `avatar_${uniqueId}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+      const filePath = `${user.id}/avatars/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('uploads')
