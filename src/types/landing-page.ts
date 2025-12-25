@@ -51,7 +51,7 @@ export interface LandingPageFormData {
 export const defaultFormData: LandingPageFormData = {
   slug: '',
   template_id: 1,
-  page_name: 'Minha Marca',
+  page_name: '',
   profile_image_url: '',
   headline: 'Descubra o Segredo Para Transformar Sua Vida',
   subheadline: '',
