@@ -91,7 +91,7 @@ const PageCard = ({
       <CardContent className="p-0">
         <div className="flex gap-3 sm:gap-4 p-3 sm:p-4">
           {/* Thumbnail */}
-          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden bg-muted flex-shrink-0 relative">
+          <div className="w-20 h-28 sm:w-24 sm:h-32 rounded-lg overflow-hidden bg-muted flex-shrink-0 relative">
             {thumbnail ? (
               <img 
                 src={thumbnail} 
