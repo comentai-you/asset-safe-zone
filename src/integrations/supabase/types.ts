@@ -131,6 +131,13 @@ export type Database = {
             referencedRelation: "landing_pages"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "page_view_tracking_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "public_landing_pages"
+            referencedColumns: ["id"]
+          },
         ]
       }
       profiles: {
@@ -219,10 +226,103 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_landing_pages: {
+        Row: {
+          colors: Json | null
+          content: Json | null
+          cover_image_url: string | null
+          created_at: string | null
+          cta_delay_enabled: boolean | null
+          cta_delay_percentage: number | null
+          cta_text: string | null
+          cta_url: string | null
+          description: string | null
+          headline: string | null
+          id: string | null
+          image_url: string | null
+          is_published: boolean | null
+          page_name: string | null
+          pix_pixel_id: string | null
+          primary_color: string | null
+          profile_image_url: string | null
+          slug: string | null
+          subheadline: string | null
+          template_id: number | null
+          template_type: string | null
+          updated_at: string | null
+          video_storage_path: string | null
+          video_url: string | null
+          views: number | null
+          whatsapp_number: string | null
+        }
+        Insert: {
+          colors?: Json | null
+          content?: Json | null
+          cover_image_url?: string | null
+          created_at?: string | null
+          cta_delay_enabled?: boolean | null
+          cta_delay_percentage?: number | null
+          cta_text?: string | null
+          cta_url?: string | null
+          description?: string | null
+          headline?: string | null
+          id?: string | null
+          image_url?: string | null
+          is_published?: boolean | null
+          page_name?: string | null
+          pix_pixel_id?: string | null
+          primary_color?: string | null
+          profile_image_url?: string | null
+          slug?: string | null
+          subheadline?: string | null
+          template_id?: number | null
+          template_type?: string | null
+          updated_at?: string | null
+          video_storage_path?: string | null
+          video_url?: string | null
+          views?: number | null
+          whatsapp_number?: string | null
+        }
+        Update: {
+          colors?: Json | null
+          content?: Json | null
+          cover_image_url?: string | null
+          created_at?: string | null
+          cta_delay_enabled?: boolean | null
+          cta_delay_percentage?: number | null
+          cta_text?: string | null
+          cta_url?: string | null
+          description?: string | null
+          headline?: string | null
+          id?: string | null
+          image_url?: string | null
+          is_published?: boolean | null
+          page_name?: string | null
+          pix_pixel_id?: string | null
+          primary_color?: string | null
+          profile_image_url?: string | null
+          slug?: string | null
+          subheadline?: string | null
+          template_id?: number | null
+          template_type?: string | null
+          updated_at?: string | null
+          video_storage_path?: string | null
+          video_url?: string | null
+          views?: number | null
+          whatsapp_number?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       can_create_page: { Args: { check_user_id: string }; Returns: boolean }
+      get_page_owner_plan: {
+        Args: { page_id: string }
+        Returns: {
+          is_trial: boolean
+          plan_type: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
