@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Search, MessageCircle, Mail, Rocket, CreditCard, Palette, Wrench } from "lucide-react";
+import { Search, Send, Mail, Rocket, CreditCard, Palette, Wrench } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -233,15 +233,15 @@ const HelpPage = () => {
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button
                   asChild
-                  className="bg-green-600 hover:bg-green-700 text-white gap-2"
+                  className="bg-[#0088cc] hover:bg-[#0077b5] text-white gap-2"
                 >
                   <a
-                    href="https://api.whatsapp.com/send?phone=5511999999999&text=Olá! Preciso de ajuda com o TrustPage."
+                    href="https://t.me/trustpage_suporte"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <MessageCircle className="h-5 w-5" />
-                    Falar no WhatsApp
+                    <Send className="h-5 w-5" />
+                    Chamar no Telegram
                   </a>
                 </Button>
                 
