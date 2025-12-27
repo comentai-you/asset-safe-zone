@@ -93,10 +93,6 @@ const HomePage = () => {
                     <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </Link>
-                <Button size="lg" variant="outline" className="w-full sm:w-auto text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 font-medium border-2">
-                  <Play className="w-5 h-5 mr-2" />
-                  Ver Demo
-                </Button>
               </div>
 
               {/* Trust indicators */}
