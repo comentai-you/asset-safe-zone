@@ -25,6 +25,7 @@ export type Database = {
           cta_text: string | null
           cta_url: string | null
           description: string | null
+          facebook_pixel_id: string | null
           headline: string | null
           id: string
           image_url: string | null
@@ -54,6 +55,7 @@ export type Database = {
           cta_text?: string | null
           cta_url?: string | null
           description?: string | null
+          facebook_pixel_id?: string | null
           headline?: string | null
           id?: string
           image_url?: string | null
@@ -83,6 +85,7 @@ export type Database = {
           cta_text?: string | null
           cta_url?: string | null
           description?: string | null
+          facebook_pixel_id?: string | null
           headline?: string | null
           id?: string
           image_url?: string | null

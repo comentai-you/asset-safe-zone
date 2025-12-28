@@ -82,14 +82,14 @@ const HomePage = () => {
               </h1>
               
               <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-muted-foreground leading-relaxed max-w-xl mx-auto lg:mx-0">
-                A ferramenta definitiva para vender serviços e infoprodutos na bio.{" "}
-                <span className="text-foreground font-medium">Sem designers, sem código.</span>
+                Comece com seu Bio Link Profissional de Graça.{" "}
+                <span className="text-foreground font-medium">Escale com VSLs quando estiver pronto.</span>
               </p>
               
               <div className="flex justify-center lg:justify-start">
                 <Link to="/auth" className="w-full sm:w-auto">
                   <Button size="xl" className="w-full sm:w-auto gradient-button text-lg sm:text-xl px-10 sm:px-14 py-6 sm:py-7 font-bold group shadow-lg">
-                    Começar 14 dias Grátis
+                    Criar Minha Página Grátis
                     <ArrowRight className="w-6 h-6 ml-3 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </Link>
@@ -318,11 +318,51 @@ const HomePage = () => {
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 gap-6 sm:gap-8 max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-6 sm:gap-8 max-w-5xl mx-auto">
+            {/* FREE Card */}
+            <div className="relative">
+              <div className="bg-card rounded-xl sm:rounded-2xl p-6 sm:p-8 border border-border shadow-elevated h-full">
+                <div className="pt-2">
+                  <h3 className="text-xl sm:text-2xl font-bold text-foreground mb-2">Gratuito</h3>
+                  <div className="flex items-baseline gap-1 mb-5 sm:mb-6">
+                    <span className="text-3xl sm:text-4xl font-black text-foreground">R$ 0</span>
+                    <span className="text-muted-foreground text-sm sm:text-base">/mês</span>
+                  </div>
+                  
+                  <ul className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
+                    <li className="flex items-start gap-2 sm:gap-3">
+                      <Check className="w-4 sm:w-5 h-4 sm:h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                      <span className="text-foreground text-sm sm:text-base">
+                        <span className="font-bold">1 Bio Link</span> Profissional
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-2 sm:gap-3">
+                      <Check className="w-4 sm:w-5 h-4 sm:h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                      <span className="text-foreground text-sm sm:text-base">Pixel do Facebook Liberado</span>
+                    </li>
+                    <li className="flex items-start gap-2 sm:gap-3">
+                      <Check className="w-4 sm:w-5 h-4 sm:h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                      <span className="text-foreground text-sm sm:text-base">Analytics Básico</span>
+                    </li>
+                    <li className="flex items-start gap-2 sm:gap-3">
+                      <Check className="w-4 sm:w-5 h-4 sm:h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                      <span className="text-foreground text-sm sm:text-base">Hospedagem Inclusa</span>
+                    </li>
+                  </ul>
+                  
+                  <Link to="/auth">
+                    <Button variant="outline" className="w-full text-base sm:text-lg py-5 sm:py-6 font-semibold border-2">
+                      Começar Grátis
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+
             {/* Essencial Card */}
             <div className="relative group">
               <div className="absolute -inset-1 bg-gradient-to-r from-primary via-accent to-primary rounded-2xl sm:rounded-3xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity" />
-              <div className="relative bg-card rounded-xl sm:rounded-2xl p-6 sm:p-8 border-2 border-primary shadow-3d">
+              <div className="relative bg-card rounded-xl sm:rounded-2xl p-6 sm:p-8 border-2 border-primary shadow-3d h-full">
                 {/* Badge */}
                 <div className="absolute -top-3 sm:-top-4 left-1/2 -translate-x-1/2">
                   <span className="px-3 sm:px-4 py-1 sm:py-1.5 bg-primary text-primary-foreground text-xs sm:text-sm font-bold rounded-full shadow-glow whitespace-nowrap">
@@ -341,16 +381,16 @@ const HomePage = () => {
                     <li className="flex items-start gap-2 sm:gap-3">
                       <Check className="w-4 sm:w-5 h-4 sm:h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
                       <span className="text-foreground text-sm sm:text-base">
-                        Crie até <span className="font-bold text-primary">5 Páginas</span> Ativas
+                        Crie até <span className="font-bold text-primary">3 Páginas</span> Ativas
                       </span>
                     </li>
                     <li className="flex items-start gap-2 sm:gap-3">
                       <Check className="w-4 sm:w-5 h-4 sm:h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
-                      <span className="text-foreground text-sm sm:text-base">Link na Bio personalizado</span>
+                      <span className="text-foreground text-sm sm:text-base font-semibold">Páginas VSL Ilimitadas</span>
                     </li>
                     <li className="flex items-start gap-2 sm:gap-3">
                       <Check className="w-4 sm:w-5 h-4 sm:h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
-                      <span className="text-foreground text-sm sm:text-base">Página VSL com vídeo integrado</span>
+                      <span className="text-foreground text-sm sm:text-base font-semibold">Delay no Botão CTA</span>
                     </li>
                     <li className="flex items-start gap-2 sm:gap-3">
                       <Check className="w-4 sm:w-5 h-4 sm:h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
@@ -358,17 +398,13 @@ const HomePage = () => {
                     </li>
                     <li className="flex items-start gap-2 sm:gap-3">
                       <Check className="w-4 sm:w-5 h-4 sm:h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
-                      <span className="text-foreground text-sm sm:text-base">Botões de Pagamento</span>
-                    </li>
-                    <li className="flex items-start gap-2 sm:gap-3">
-                      <Check className="w-4 sm:w-5 h-4 sm:h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
-                      <span className="text-foreground text-sm sm:text-base">Domínio personalizado</span>
+                      <span className="text-foreground text-sm sm:text-base">Domínio Personalizado</span>
                     </li>
                   </ul>
                   
                   <Link to="/auth">
                     <Button className="w-full gradient-button text-base sm:text-lg py-5 sm:py-6 font-bold">
-                      Começar com 5 Páginas
+                      Assinar Essencial
                       <ArrowRight className="w-4 sm:w-5 h-4 sm:h-5 ml-2" />
                     </Button>
                   </Link>
@@ -378,7 +414,7 @@ const HomePage = () => {
 
             {/* Pro Card */}
             <div className="relative opacity-80">
-              <div className="bg-card rounded-xl sm:rounded-2xl p-6 sm:p-8 border border-border shadow-elevated">
+              <div className="bg-card rounded-xl sm:rounded-2xl p-6 sm:p-8 border border-border shadow-elevated h-full">
                 {/* Badge */}
                 <div className="absolute -top-3 sm:-top-4 left-1/2 -translate-x-1/2">
                   <span className="inline-flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1 sm:py-1.5 bg-muted text-muted-foreground text-xs sm:text-sm font-semibold rounded-full border border-border whitespace-nowrap">
@@ -398,32 +434,20 @@ const HomePage = () => {
                     <li className="flex items-start gap-2 sm:gap-3">
                       <Check className="w-4 sm:w-5 h-4 sm:h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
                       <span className="text-foreground text-sm sm:text-base">
-                        Crie até <span className="font-bold">20 Páginas</span> Ativas
+                        Crie até <span className="font-bold">10 Páginas</span> Ativas
                       </span>
                     </li>
                     <li className="flex items-start gap-2 sm:gap-3">
                       <Check className="w-4 sm:w-5 h-4 sm:h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
-                      <span className="text-foreground text-sm sm:text-base">Link na Bio personalizado</span>
+                      <span className="text-foreground text-sm sm:text-base">API de Conversão (Server-Side)</span>
                     </li>
                     <li className="flex items-start gap-2 sm:gap-3">
                       <Check className="w-4 sm:w-5 h-4 sm:h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
-                      <span className="text-foreground text-sm sm:text-base">Página VSL com vídeo integrado</span>
+                      <span className="text-foreground text-sm sm:text-base font-semibold">Zero Marca d'água</span>
                     </li>
                     <li className="flex items-start gap-2 sm:gap-3">
                       <Check className="w-4 sm:w-5 h-4 sm:h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
-                      <span className="text-foreground text-sm sm:text-base">Página de Vendas completa</span>
-                    </li>
-                    <li className="flex items-start gap-2 sm:gap-3">
-                      <Check className="w-4 sm:w-5 h-4 sm:h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
-                      <span className="text-foreground text-sm sm:text-base">Pixel de Rastreamento (Meta/Google)</span>
-                    </li>
-                    <li className="flex items-start gap-2 sm:gap-3">
-                      <Check className="w-4 sm:w-5 h-4 sm:h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
-                      <span className="text-foreground text-sm sm:text-base">Domínio Personalizado</span>
-                    </li>
-                    <li className="flex items-start gap-2 sm:gap-3">
-                      <Check className="w-4 sm:w-5 h-4 sm:h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
-                      <span className="text-foreground text-sm sm:text-base">Sem Marca d'água (White Label)</span>
+                      <span className="text-foreground text-sm sm:text-base">Suporte Prioritário</span>
                     </li>
                   </ul>
                   
