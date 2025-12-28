@@ -7,7 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
-import { Crown, Check, Zap, Clock, Sparkles, Loader2, Star } from "lucide-react";
+import { Crown, Check, Zap, Sparkles, Loader2, Star, Gift } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,7 +19,7 @@ interface PricingModalProps {
   userFullName?: string | null;
 }
 
-const PricingModal = ({ open, onOpenChange, isTrialExpired = false, userFullName }: PricingModalProps) => {
+const PricingModal = ({ open, onOpenChange, userFullName }: PricingModalProps) => {
   const { user } = useAuth();
   const [loadingPlan, setLoadingPlan] = useState<'essential' | 'pro' | null>(null);
 
@@ -66,39 +66,83 @@ const PricingModal = ({ open, onOpenChange, isTrialExpired = false, userFullName
     }
   };
 
+  const freeFeatures = [
+    "1 Bio Link Profissional",
+    "Pixel do Facebook Liberado",
+    "Analytics Básico",
+    "Hospedagem Inclusa",
+  ];
+
   const essentialFeatures = [
-    "Até 3 Páginas Ativas",
-    "Proteção contra Bloqueios",
-    "Templates: VSL, Vendas e Bio",
-    "Suporte por E-mail",
+    { text: "Tudo do Gratuito +", highlight: false },
+    { text: "3 Páginas Ativas", highlight: true },
+    { text: "Páginas VSL com Vídeo", highlight: true },
+    { text: "Página de Vendas", highlight: false },
+    { text: "Delay no Botão CTA", highlight: true },
+    { text: "Domínio Personalizado", highlight: false },
   ];
 
   const proFeatures = [
-    { text: "Tudo do Essencial", highlight: false },
+    { text: "Tudo do Essencial +", highlight: false },
     { text: "10 Páginas Ativas", highlight: true },
-    { text: "Domínio Personalizado", highlight: false },
-    { text: "Prioridade no Suporte", highlight: false },
-    { text: "Remoção da Marca d'água", highlight: false },
+    { text: "API de Conversão (Server-Side)", highlight: false },
+    { text: "Zero Marca d'água", highlight: true },
+    { text: "Suporte Prioritário", highlight: false },
   ];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="text-center pb-2">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mx-auto mb-3 shadow-lg">
             <Crown className="w-7 h-7 text-primary-foreground" />
           </div>
           <DialogTitle className="text-2xl font-bold text-foreground">
-            {isTrialExpired ? "Seu período de teste expirou" : "Escolha seu Plano"}
+            Escolha seu Plano
           </DialogTitle>
           <p className="text-muted-foreground text-sm mt-1">
-            {isTrialExpired 
-              ? "Assine um plano para manter suas páginas no ar" 
-              : "Desbloqueie todo o potencial do TrustPage"}
+            Desbloqueie todo o potencial do TrustPage
           </p>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+          {/* FREE Plan */}
+          <Card className="relative border-border/50">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+                  <Gift className="w-5 h-5 text-muted-foreground" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground">Gratuito</h3>
+                  <p className="text-xs text-muted-foreground">Para começar</p>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <span className="text-3xl font-bold text-foreground">R$ 0</span>
+                <span className="text-muted-foreground text-sm">/mês</span>
+              </div>
+
+              <ul className="space-y-2.5 mb-5">
+                {freeFeatures.map((feature, index) => (
+                  <li key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
+                    <Check className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => onOpenChange(false)}
+              >
+                Plano Atual
+              </Button>
+            </CardContent>
+          </Card>
+
           {/* Essential Plan - Popular */}
           <Card className="relative border-primary/50 bg-primary/5 shadow-lg shadow-primary/10">
             {/* Popular Badge */}
@@ -116,7 +160,7 @@ const PricingModal = ({ open, onOpenChange, isTrialExpired = false, userFullName
                 </div>
                 <div>
                   <h3 className="font-semibold text-foreground">Essencial</h3>
-                  <p className="text-xs text-muted-foreground">Para começar</p>
+                  <p className="text-xs text-muted-foreground">Para escalar</p>
                 </div>
               </div>
 
@@ -127,9 +171,11 @@ const PricingModal = ({ open, onOpenChange, isTrialExpired = false, userFullName
 
               <ul className="space-y-2.5 mb-5">
                 {essentialFeatures.map((feature, index) => (
-                  <li key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
+                  <li key={index} className="flex items-start gap-2 text-sm">
                     <Check className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
-                    <span>{feature}</span>
+                    <span className={feature.highlight ? "font-semibold text-foreground" : "text-muted-foreground"}>
+                      {feature.text}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -157,22 +203,14 @@ const PricingModal = ({ open, onOpenChange, isTrialExpired = false, userFullName
 
           {/* PRO Plan - Coming Soon */}
           <Card className="relative border-border/50 opacity-75">
-            {/* Coming Soon Badge */}
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-muted text-muted-foreground text-xs font-semibold border border-border">
-                <Clock className="w-3 h-3" />
-                Disponível em Breve
-              </span>
-            </div>
-
-            <CardContent className="p-5 pt-6">
+            <CardContent className="p-5">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
                   <Crown className="w-5 h-5 text-muted-foreground" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-foreground">PRO</h3>
-                  <p className="text-xs text-muted-foreground">Escale suas vendas</p>
+                  <p className="text-xs text-muted-foreground">Em breve</p>
                 </div>
               </div>
 

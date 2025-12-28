@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Sparkles, Crown, Clock, AlertTriangle, Loader2 } from "lucide-react";
+import { Plus, Sparkles, Crown, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import PricingModal from "@/components/PricingModal";
+import UpgradeModal from "@/components/UpgradeModal";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import StatsBar from "@/components/dashboard/StatsBar";
@@ -24,6 +25,7 @@ interface LandingPage {
   image_url: string | null;
   video_url: string | null;
   cover_image_url: string | null;
+  template_type: string | null;
 }
 
 interface UserProfile {
@@ -34,36 +36,32 @@ interface UserProfile {
   avatar_url: string | null;
 }
 
-const MAX_PAGES_ESSENTIAL = 3;
-const MAX_PAGES_PRO = 10;
-const TRIAL_DAYS = 14;
+const getMaxPages = (planType: string) => {
+  switch (planType) {
+    case 'pro':
+    case 'elite':
+      return 10;
+    case 'essential':
+      return 3;
+    default:
+      return 1; // FREE plan
+  }
+};
 
 const TrustPageDashboard = () => {
   const [pages, setPages] = useState<LandingPage[]>([]);
   const [loading, setLoading] = useState(true);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showPricingModal, setShowPricingModal] = useState(false);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [upgradeFeature, setUpgradeFeature] = useState<'vsl' | 'sales' | 'delay' | 'domain' | 'video' | 'html' | 'limit'>('limit');
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; id: string; name: string }>({ open: false, id: '', name: '' });
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Calculate trial days remaining
-  const getTrialDaysRemaining = () => {
-    if (!profile) return 0;
-    const createdAt = new Date(profile.created_at);
-    const now = new Date();
-    const diffTime = now.getTime() - createdAt.getTime();
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    return Math.max(0, TRIAL_DAYS - diffDays);
-  };
-
-  const trialDaysRemaining = getTrialDaysRemaining();
-  const isTrialExpired = profile?.subscription_status === 'trial' && trialDaysRemaining <= 0;
-  const isActive = profile?.subscription_status === 'active';
-  
-  // Determine max pages based on plan
-  const maxPages = profile?.plan_type === 'pro' ? MAX_PAGES_PRO : MAX_PAGES_ESSENTIAL;
+  const isFreePlan = profile?.plan_type === 'free';
+  const maxPages = getMaxPages(profile?.plan_type || 'free');
   const hasReachedLimit = pages.length >= maxPages;
 
   // Calculate total views
@@ -95,7 +93,7 @@ const TrustPageDashboard = () => {
     try {
       const { data, error } = await supabase
         .from("landing_pages")
-        .select("id, page_name, slug, views, is_published, updated_at, image_url, video_url, cover_image_url")
+        .select("id, page_name, slug, views, is_published, updated_at, image_url, video_url, cover_image_url, template_type")
         .eq("user_id", user!.id)
         .order("updated_at", { ascending: false });
 
@@ -140,11 +138,8 @@ const TrustPageDashboard = () => {
   };
 
   const handleNewPage = () => {
-    if (isTrialExpired) {
-      setShowUpgradeModal(true);
-      return;
-    }
     if (hasReachedLimit) {
+      setUpgradeFeature('limit');
       setShowUpgradeModal(true);
     } else {
       setShowTemplateModal(true);
@@ -152,14 +147,17 @@ const TrustPageDashboard = () => {
   };
 
   const handleTemplateSelect = (templateType: TemplateType) => {
+    // FREE plan can only create bio pages
+    if (isFreePlan && templateType !== 'bio') {
+      setUpgradeFeature(templateType === 'vsl' ? 'vsl' : 'sales');
+      setShowUpgradeModal(true);
+      setShowTemplateModal(false);
+      return;
+    }
     navigate(`/new?type=${templateType}`);
   };
 
   const handleEdit = (pageId: string) => {
-    if (isTrialExpired) {
-      setShowUpgradeModal(true);
-      return;
-    }
     navigate(`/edit/${pageId}`);
   };
 
@@ -168,40 +166,26 @@ const TrustPageDashboard = () => {
       avatarUrl={profile?.avatar_url}
       fullName={profile?.full_name}
       onNewPage={handleNewPage}
-      newPageDisabled={isTrialExpired}
     >
-      {/* Trial Banner */}
-      {profile && profile.subscription_status === 'trial' && (
-        <div className={`border-b ${
-          isTrialExpired 
-            ? 'bg-destructive/5 border-destructive/20' 
-            : trialDaysRemaining <= 3 
-              ? 'bg-warning/5 border-warning/20' 
-              : 'bg-primary/5 border-primary/20'
-        }`}>
+      {/* Free Plan Banner */}
+      {isFreePlan && (
+        <div className="bg-primary/5 border-b border-primary/20">
           <div className="container mx-auto px-4 py-2.5 sm:py-3">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4">
               <div className="flex items-center gap-2 sm:gap-3 text-center sm:text-left">
-                {isTrialExpired ? (
-                  <AlertTriangle className="w-4 sm:w-5 h-4 sm:h-5 text-destructive flex-shrink-0" />
-                ) : (
-                  <Clock className="w-4 sm:w-5 h-4 sm:h-5 text-primary flex-shrink-0" />
-                )}
-                <p className={`text-xs sm:text-sm font-medium ${isTrialExpired ? 'text-destructive' : 'text-foreground'}`}>
-                  {isTrialExpired 
-                    ? 'Período de teste expirado. Suas páginas estão suspensas.' 
-                    : `Seu teste grátis acaba em ${trialDaysRemaining} dia${trialDaysRemaining !== 1 ? 's' : ''}. Aproveite para vender!`
-                  }
+                <Sparkles className="w-4 sm:w-5 h-4 sm:h-5 text-primary flex-shrink-0" />
+                <p className="text-xs sm:text-sm font-medium text-foreground">
+                  Você está no plano Gratuito. Faça upgrade para desbloquear VSLs, delay no botão e mais!
                 </p>
               </div>
               <Button 
-                variant={isTrialExpired ? "destructive" : "outline"} 
+                variant="outline" 
                 size="sm"
-                onClick={() => setShowUpgradeModal(true)}
-                className="whitespace-nowrap"
+                onClick={() => setShowPricingModal(true)}
+                className="whitespace-nowrap border-primary text-primary hover:bg-primary hover:text-primary-foreground"
               >
                 <Crown className="w-3.5 sm:w-4 h-3.5 sm:h-4 mr-1.5 sm:mr-2" />
-                {isTrialExpired ? 'Assinar Agora' : 'Fazer Upgrade'}
+                Fazer Upgrade
               </Button>
             </div>
           </div>
@@ -225,8 +209,8 @@ const TrustPageDashboard = () => {
           <StatsBar
             totalViews={totalViews}
             totalPages={pages.length}
-            planType={profile?.plan_type || 'essential'}
-            subscriptionStatus={profile?.subscription_status || 'trial'}
+            planType={profile?.plan_type || 'free'}
+            subscriptionStatus={profile?.subscription_status || 'free'}
           />
         </div>
 
@@ -241,7 +225,7 @@ const TrustPageDashboard = () => {
               : 'bg-primary/10 text-primary border border-primary/20'
           }`}>
             {hasReachedLimit && <Crown className="w-3.5 sm:w-4 h-3.5 sm:h-4" />}
-            <span className="font-semibold">{pages.length}/{maxPages} páginas</span>
+            <span className="font-semibold">{pages.length}/{maxPages} {maxPages === 1 ? 'página' : 'páginas'}</span>
           </div>
         </div>
 
@@ -258,15 +242,16 @@ const TrustPageDashboard = () => {
                 </div>
                 <div>
                   <h3 className="text-base sm:text-lg font-semibold text-foreground">Crie sua primeira página</h3>
-                  <p className="text-sm sm:text-base text-muted-foreground">Comece a converter visitantes em clientes</p>
+                  <p className="text-sm sm:text-base text-muted-foreground">
+                    {isFreePlan ? 'Comece com um Bio Link profissional' : 'Comece a converter visitantes em clientes'}
+                  </p>
                 </div>
                 <Button 
-                  onClick={handleNewPage} 
-                  disabled={isTrialExpired}
+                  onClick={handleNewPage}
                   className="gradient-button text-primary-foreground border-0"
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  Criar Página
+                  {isFreePlan ? 'Criar Bio Link' : 'Criar Página'}
                 </Button>
               </div>
             </CardContent>
@@ -276,24 +261,14 @@ const TrustPageDashboard = () => {
             {/* Create New Card */}
             <Card 
               className={`h-full border-dashed transition-all cursor-pointer hover-lift ${
-                isTrialExpired
-                  ? 'opacity-50 cursor-not-allowed'
-                  : hasReachedLimit 
-                    ? 'hover:border-warning/50 hover:bg-warning/5' 
-                    : 'hover:border-primary/50 hover:bg-primary/5'
+                hasReachedLimit 
+                  ? 'hover:border-warning/50 hover:bg-warning/5' 
+                  : 'hover:border-primary/50 hover:bg-primary/5'
               }`}
               onClick={handleNewPage}
             >
               <CardContent className="flex flex-col items-center justify-center h-full min-h-[140px] sm:min-h-[160px] gap-2 sm:gap-3 p-6">
-                {isTrialExpired ? (
-                  <>
-                    <div className="w-12 h-12 rounded-xl bg-destructive/10 flex items-center justify-center">
-                      <AlertTriangle className="w-6 h-6 text-destructive" />
-                    </div>
-                    <p className="font-semibold text-destructive">Trial expirado</p>
-                    <p className="text-sm text-destructive/80">Assine para continuar</p>
-                  </>
-                ) : hasReachedLimit ? (
+                {hasReachedLimit ? (
                   <>
                     <div className="w-12 h-12 rounded-xl bg-warning/10 flex items-center justify-center">
                       <Crown className="w-6 h-6 text-warning" />
@@ -326,7 +301,7 @@ const TrustPageDashboard = () => {
                 imageUrl={page.image_url}
                 videoUrl={page.video_url}
                 coverImageUrl={page.cover_image_url}
-                isTrialExpired={isTrialExpired}
+                isTrialExpired={false}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
                 onCopyLink={handleCopyLink}
@@ -337,16 +312,22 @@ const TrustPageDashboard = () => {
       </main>
 
       <PricingModal 
-        open={showUpgradeModal} 
-        onOpenChange={setShowUpgradeModal} 
-        isTrialExpired={isTrialExpired}
+        open={showPricingModal} 
+        onOpenChange={setShowPricingModal}
         userFullName={profile?.full_name}
+      />
+
+      <UpgradeModal
+        open={showUpgradeModal}
+        onOpenChange={setShowUpgradeModal}
+        feature={upgradeFeature}
       />
       
       <TemplateSelectionModal 
         open={showTemplateModal} 
         onOpenChange={setShowTemplateModal}
         onSelect={handleTemplateSelect}
+        isFreePlan={isFreePlan}
       />
       
       <ConfirmDialog

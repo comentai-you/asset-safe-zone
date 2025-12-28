@@ -5,8 +5,8 @@ interface TrustPageWatermarkProps {
 }
 
 const TrustPageWatermark = ({ ownerPlan }: TrustPageWatermarkProps) => {
-  // Only show watermark for non-PRO users (trial and essential)
-  // PRO users get white-label (no watermark)
+  // Show watermark for FREE and Essential plans
+  // PRO/Elite users get white-label (no watermark)
   if (ownerPlan === 'pro' || ownerPlan === 'elite') {
     return null;
   }

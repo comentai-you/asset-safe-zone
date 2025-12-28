@@ -11,6 +11,36 @@ import AdsViolationBar from "@/components/AdsViolationBar";
 import TrustPageWatermark from "@/components/TrustPageWatermark";
 import { useIsMobile } from "@/hooks/use-mobile";
 
+// Inject Facebook Pixel script
+const injectFacebookPixel = (pixelId: string) => {
+  if (!pixelId || typeof window === 'undefined') return;
+  
+  // Check if already injected
+  if (document.getElementById('fb-pixel-script')) return;
+
+  const script = document.createElement('script');
+  script.id = 'fb-pixel-script';
+  script.innerHTML = `
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '${pixelId}');
+    fbq('track', 'PageView');
+  `;
+  document.head.appendChild(script);
+
+  // Add noscript fallback
+  const noscript = document.createElement('noscript');
+  noscript.id = 'fb-pixel-noscript';
+  noscript.innerHTML = `<img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=${pixelId}&ev=PageView&noscript=1"/>`;
+  document.body.appendChild(noscript);
+};
+
 const LandingPageView = () => {
   const { slug } = useParams<{ slug: string }>();
   const [searchParams] = useSearchParams();
@@ -29,8 +59,8 @@ const LandingPageView = () => {
     return hasFbclid || hasGclid || hasUtmAds;
   }, [searchParams]);
 
-  // Show violation bar if from paid ads AND owner is on essential/trial plan
-  const showViolationBar = isFromPaidAds && (ownerPlan === 'essential' || ownerPlan === 'trial');
+  // Show violation bar if from paid ads AND owner is on essential/free plan
+  const showViolationBar = isFromPaidAds && (ownerPlan === 'essential' || ownerPlan === 'free');
 
   useEffect(() => {
     const fetchPage = async () => {
@@ -41,8 +71,6 @@ const LandingPageView = () => {
       }
 
       try {
-        // Use secure RPC function that doesn't expose user_id
-        // This function only returns published pages from users with active subscriptions
         const { data: page, error } = await supabase
           .rpc('get_published_page_by_slug', { page_slug: slug })
           .maybeSingle();
@@ -50,43 +78,40 @@ const LandingPageView = () => {
         if (error) throw error;
 
         if (!page) {
-          // Page not found OR owner's subscription expired (RPC hides it)
           setNotFound(true);
           setLoading(false);
           return;
         }
 
-        // Fetch owner's plan type using secure RPC function
-        // This doesn't expose the user_id, only returns plan info for the page
+        // Fetch owner's plan type
         const { data: ownerPlanData } = await supabase
           .rpc('get_page_owner_plan', { page_id: page.id })
           .maybeSingle();
         
         if (ownerPlanData) {
-          if (ownerPlanData.is_trial) {
-            setOwnerPlan('trial');
-          } else {
-            setOwnerPlan(ownerPlanData.plan_type || 'essential');
-          }
+          setOwnerPlan(ownerPlanData.plan_type || 'free');
         }
 
-        // Increment view counter via Edge Function with IP-based rate limiting
+        // Inject Facebook Pixel if configured
+        if (page.pix_pixel_id) {
+          injectFacebookPixel(page.pix_pixel_id);
+        }
+
+        // Increment view counter
         const viewKey = `viewed_${page.id}`;
         if (!sessionStorage.getItem(viewKey)) {
           sessionStorage.setItem(viewKey, 'true');
-          // Call Edge Function for server-side IP-based view tracking
           void (async () => {
             try {
               await supabase.functions.invoke('increment-page-view', {
                 body: { page_id: page.id }
               });
             } catch {
-              // Silently ignore view count errors
+              // Silently ignore
             }
           })();
         }
 
-        // Map database data to form data format
         const colors = page.colors as unknown as LandingPageColors || defaultFormData.colors;
         const content = page.content as unknown as SalesPageContent || defaultSalesContent;
         const templateType = (page.template_type as TemplateType) || 'vsl';
@@ -158,8 +183,8 @@ const LandingPageView = () => {
     );
   }
 
-  // Check if watermark should show (non-PRO users)
-  const showWatermark = ownerPlan !== 'pro' && ownerPlan !== 'elite';
+  // Check if watermark should show (non-PRO users - free/essential show watermark)
+  const showWatermark = ownerPlan === 'free' || ownerPlan === 'essential';
 
   return (
     <div 
