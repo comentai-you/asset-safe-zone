@@ -92,9 +92,10 @@ const LandingPageView = () => {
           setOwnerPlan(ownerPlanData.plan_type || 'free');
         }
 
-        // Inject Facebook Pixel if configured
-        if (page.pix_pixel_id) {
-          injectFacebookPixel(page.pix_pixel_id);
+        // Inject Facebook Pixel if configured (prefer facebook_pixel_id, fallback to pix_pixel_id)
+        const pixelId = (page as any).facebook_pixel_id || page.pix_pixel_id;
+        if (pixelId) {
+          injectFacebookPixel(pixelId);
         }
 
         // Increment view counter
@@ -139,6 +140,7 @@ const LandingPageView = () => {
           cta_delay_percentage: page.cta_delay_percentage ?? 50,
           whatsapp_number: page.whatsapp_number || '',
           pix_pixel_id: page.pix_pixel_id || '',
+          facebook_pixel_id: (page as any).facebook_pixel_id || '',
           colors,
           primary_color: page.primary_color || '#8B5CF6',
           content,
