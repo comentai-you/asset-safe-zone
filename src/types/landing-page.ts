@@ -207,6 +207,7 @@ export interface LandingPageFormData {
   cta_delay_percentage: number;
   whatsapp_number: string;
   pix_pixel_id: string;
+  facebook_pixel_id: string;
   colors: LandingPageColors;
   primary_color: string;
   content: SalesPageContent | BioLinkContent;
@@ -237,6 +238,7 @@ export const defaultFormData: LandingPageFormData = {
   cta_delay_percentage: 50,
   whatsapp_number: '',
   pix_pixel_id: '',
+  facebook_pixel_id: '',
   colors: {
     primary: '#22c55e',
     background: '#09090b',

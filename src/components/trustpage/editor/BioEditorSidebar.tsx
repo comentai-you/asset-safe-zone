@@ -7,7 +7,7 @@ import { LandingPageFormData, BioLinkContent, BioLink, defaultBioContent } from 
 import { 
   Accordion, AccordionContent, AccordionItem, AccordionTrigger 
 } from "@/components/ui/accordion";
-import { User, Share2, Link2, Palette, Upload, X, Loader2, Plus, Settings } from "lucide-react";
+import { User, Share2, Link2, Palette, Upload, X, Loader2, Plus, Settings, BarChart3 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -196,6 +196,27 @@ const BioEditorSidebar = ({ formData, onChange }: BioEditorSidebarProps) => {
               coverImageUrl={formData.cover_image_url || ''} 
               onChange={(url) => onChange({ cover_image_url: url })} 
             />
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* Tracking - Facebook Pixel */}
+        <AccordionItem value="tracking">
+          <AccordionTrigger className="px-4 py-3 hover:bg-gray-50">
+            <div className="flex items-center gap-2 text-sm font-medium"><BarChart3 className="w-4 h-4 text-primary" />Rastreamento</div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4 space-y-4">
+            <div className="space-y-2">
+              <Label className="text-xs text-gray-600">Facebook Pixel ID</Label>
+              <Input 
+                value={formData.facebook_pixel_id || ''} 
+                onChange={(e) => onChange({ facebook_pixel_id: e.target.value })} 
+                placeholder="Ex: 123456789012345" 
+                className="text-sm font-mono" 
+              />
+              <p className="text-[10px] text-muted-foreground">
+                Cole o ID do seu Pixel para rastrear PageViews automaticamente.
+              </p>
+            </div>
           </AccordionContent>
         </AccordionItem>
 

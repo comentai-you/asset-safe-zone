@@ -10,16 +10,26 @@ interface StatsBarProps {
 
 const StatsBar = ({ totalViews, totalPages, planType, subscriptionStatus }: StatsBarProps) => {
   const getPlanBadge = () => {
+    // Free plan
+    if (subscriptionStatus === 'free' || planType === 'free') {
+      return {
+        label: 'Gratuito',
+        className: 'bg-muted text-muted-foreground border border-border',
+        icon: Crown
+      };
+    }
+    // Active paid plans
     if (subscriptionStatus === 'active') {
       return {
-        label: planType === 'pro' ? 'Pro' : 'Essencial',
+        label: planType === 'pro' ? 'Pro' : planType === 'elite' ? 'Elite' : 'Essencial',
         className: 'bg-gradient-to-r from-primary to-accent text-primary-foreground',
         icon: Crown
       };
     }
+    // Fallback
     return {
-      label: 'Trial',
-      className: 'bg-warning/10 text-warning border border-warning/30',
+      label: 'Gratuito',
+      className: 'bg-muted text-muted-foreground border border-border',
       icon: Crown
     };
   };

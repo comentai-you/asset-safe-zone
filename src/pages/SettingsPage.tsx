@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, CreditCard, Shield, ArrowLeft, Loader2, Camera, Check, AlertCircle, Globe, Copy, ExternalLink } from "lucide-react";
+import { User, CreditCard, Shield, ArrowLeft, Loader2, Camera, Check, AlertCircle, Globe, Copy, ExternalLink, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -291,7 +291,7 @@ const SettingsPage = () => {
               <Shield className="w-4 h-4" />
               <span>Segurança</span>
             </TabsTrigger>
-            {profile?.subscription_status !== 'trial' && (
+            {profile?.subscription_status !== 'free' && profile?.plan_type !== 'free' && (
               <TabsTrigger value="domains" className="flex items-center gap-2 data-[state=active]:bg-background">
                 <Globe className="w-4 h-4" />
                 <span className="hidden sm:inline">Domínios</span>
@@ -388,28 +388,21 @@ const SettingsPage = () => {
 
           {/* Billing Tab */}
           <TabsContent value="billing" className="space-y-6 animate-fade-in">
-            {/* Trial/Plan Status Card */}
-            {profile?.subscription_status === 'trial' ? (
-              <Card className="border-warning/30 bg-warning/5">
+            {/* Plan Status Card */}
+            {(profile?.subscription_status === 'free' || profile?.plan_type === 'free') ? (
+              <Card className="border-primary/30 bg-primary/5">
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-warning/20 flex items-center justify-center flex-shrink-0">
-                      <AlertCircle className="w-6 h-6 text-warning" />
+                    <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center flex-shrink-0">
+                      <Crown className="w-6 h-6 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="text-lg font-semibold text-foreground mb-1">
-                        Seu teste grátis expira em {trialDaysRemaining} dia{trialDaysRemaining !== 1 ? 's' : ''}
+                        Plano Gratuito
                       </h3>
                       <p className="text-sm text-muted-foreground mb-4">
-                        Aproveite todos os recursos do TrustPage durante seu período de teste
+                        Você está usando o plano gratuito com 1 Bio Link e Pixel liberado. Faça upgrade para desbloquear páginas VSL, domínio próprio e mais!
                       </p>
-                      <div className="space-y-2 mb-4">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Progresso do Trial</span>
-                          <span className="font-medium">{TRIAL_DAYS - trialDaysRemaining} de {TRIAL_DAYS} dias</span>
-                        </div>
-                        <Progress value={trialProgress} className="h-2" />
-                      </div>
                       <Button 
                         className="gradient-button text-primary-foreground border-0 w-full sm:w-auto"
                         onClick={() => setShowPricingModal(true)}
@@ -420,7 +413,7 @@ const SettingsPage = () => {
                   </div>
                 </CardContent>
               </Card>
-            ) : (
+            ) : profile?.subscription_status === 'active' ? (
               <Card className="border-success/30 bg-success/5">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
@@ -429,7 +422,7 @@ const SettingsPage = () => {
                     </div>
                     <div>
                       <h3 className="text-lg font-semibold text-foreground">
-                        Plano {profile?.plan_type === 'pro' ? 'Pro' : 'Essencial'} Ativo
+                        Plano {profile?.plan_type === 'pro' ? 'Pro' : profile?.plan_type === 'elite' ? 'Elite' : 'Essencial'} Ativo
                       </h3>
                       <p className="text-sm text-muted-foreground">
                         Você tem acesso a todos os recursos do seu plano
@@ -438,7 +431,7 @@ const SettingsPage = () => {
                   </div>
                 </CardContent>
               </Card>
-            )}
+            ) : null}
 
             {/* Invoice History */}
             <Card>
@@ -529,7 +522,7 @@ const SettingsPage = () => {
 
           {/* Domains Tab */}
           <TabsContent value="domains" className="space-y-6 animate-fade-in">
-            {profile?.subscription_status === 'trial' ? (
+            {(profile?.subscription_status === 'free' || profile?.plan_type === 'free') ? (
               <Card className="border-warning/30 bg-warning/5">
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">
@@ -538,10 +531,10 @@ const SettingsPage = () => {
                     </div>
                     <div className="flex-1">
                       <h3 className="text-lg font-semibold text-foreground mb-1">
-                        Recurso não disponível no Trial
+                        Recurso não disponível no Plano Gratuito
                       </h3>
                       <p className="text-sm text-muted-foreground mb-4">
-                        Domínios personalizados estão disponíveis nos planos Essential e Pro.
+                        Domínios personalizados estão disponíveis nos planos Essencial e Pro.
                       </p>
                       <Button 
                         className="gradient-button text-primary-foreground border-0"
