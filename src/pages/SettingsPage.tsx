@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, CreditCard, Shield, ArrowLeft, Loader2, Camera, Check, AlertCircle, Globe, Copy, ExternalLink, Crown, RefreshCw } from "lucide-react";
+import { User, CreditCard, Shield, ArrowLeft, Loader2, Camera, Check, AlertCircle, Globe, Copy, ExternalLink, Crown, RefreshCw, Trash2, Lock, ShieldCheck, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import PricingModal from "@/components/PricingModal";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 interface UserProfile {
   id: string;
@@ -31,6 +32,18 @@ type VercelVerificationRecord = {
   domain: string;
   value: string;
   reason?: string;
+};
+
+type DnsInstruction = {
+  type: string;
+  name: string;
+  value: string;
+  note?: string;
+};
+
+type SslStatus = {
+  status: 'pending' | 'active' | 'error';
+  expiresAt: string | null;
 };
 
 const TRIAL_DAYS = 14;
@@ -57,6 +70,11 @@ const SettingsPage = () => {
   const [lastDomainCheckAt, setLastDomainCheckAt] = useState<string | null>(null);
   const [vercelVerification, setVercelVerification] = useState<VercelVerificationRecord[] | null>(null);
   const [domainMisconfigured, setDomainMisconfigured] = useState<boolean | null>(null);
+  const [removingDomain, setRemovingDomain] = useState(false);
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
+  const [dnsInstructions, setDnsInstructions] = useState<DnsInstruction | null>(null);
+  const [sslStatus, setSslStatus] = useState<SslStatus | null>(null);
+  const [isSubdomain, setIsSubdomain] = useState<boolean>(false);
 
   const handleVerifyDomain = useCallback(
     async ({
@@ -92,6 +110,17 @@ const SettingsPage = () => {
         setLastDomainCheckAt(typeof data?.checkedAt === 'string' ? data.checkedAt : new Date().toISOString());
         setVercelVerification(Array.isArray(data?.verification) ? data.verification : null);
         setDomainMisconfigured(typeof data?.misconfigured === 'boolean' ? data.misconfigured : null);
+        setIsSubdomain(!!data?.isSubdomain);
+        
+        // Set DNS instructions from API
+        if (data?.dnsInstructions) {
+          setDnsInstructions(data.dnsInstructions);
+        }
+        
+        // Set SSL status
+        if (data?.ssl) {
+          setSslStatus(data.ssl);
+        }
 
         if (!silent) {
           toast.success(
@@ -110,17 +139,33 @@ const SettingsPage = () => {
     [profile?.custom_domain],
   );
 
-  useEffect(() => {
-    if (user) {
-      fetchProfile();
-    }
-  }, [user]);
+  const handleRemoveDomain = async () => {
+    setRemovingDomain(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('remove-domain');
 
-  // Auto-check domain status once (helps show the right DNS records from Vercel)
-  useEffect(() => {
-    if (!profile?.custom_domain || profile.domain_verified) return;
-    handleVerifyDomain({ silent: true });
-  }, [profile?.custom_domain, profile?.domain_verified, handleVerifyDomain]);
+      if (error) throw error;
+      if (data?.error) {
+        toast.error(data.error);
+        return;
+      }
+
+      toast.success("Domínio removido com sucesso!");
+      setProfile(prev => prev ? { ...prev, custom_domain: null, domain_verified: false } : null);
+      setShowDnsInstructions(false);
+      setVercelVerification(null);
+      setDomainMisconfigured(null);
+      setDnsInstructions(null);
+      setSslStatus(null);
+      setDomainInput("");
+    } catch (err: any) {
+      console.error('Error removing domain:', err);
+      toast.error(err?.message || 'Erro ao remover domínio');
+    } finally {
+      setRemovingDomain(false);
+      setShowRemoveConfirm(false);
+    }
+  };
 
   // Auto-refresh domain verification every 60s while pending
   useEffect(() => {
@@ -630,51 +675,94 @@ const SettingsPage = () => {
               <>
                 {/* Current Domain */}
                 {profile?.custom_domain && (
-                  <Card className="border-success/30 bg-success/5">
+                  <Card className={profile.domain_verified ? "border-success/30 bg-success/5" : "border-warning/30 bg-warning/5"}>
                     <CardContent className="p-6">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-success/20 flex items-center justify-center flex-shrink-0">
-                          <Globe className="w-6 h-6 text-success" />
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-foreground">
-                            Domínio Configurado
-                          </h3>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="font-mono bg-muted px-2 py-1 rounded">{profile.custom_domain}</span>
+                      <div className="flex flex-col gap-4">
+                        <div className="flex items-start gap-4">
+                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${profile.domain_verified ? 'bg-success/20' : 'bg-warning/20'}`}>
+                            <Globe className={`w-6 h-6 ${profile.domain_verified ? 'text-success' : 'text-warning'}`} />
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="text-lg font-semibold text-foreground">
+                              Domínio Configurado
+                            </h3>
+                            <div className="flex flex-wrap items-center gap-2 mt-1">
+                              <span className="font-mono bg-muted px-2 py-1 rounded">{profile.custom_domain}</span>
+                              {isSubdomain && (
+                                <span className="text-xs bg-muted px-2 py-0.5 rounded text-muted-foreground">subdomínio</span>
+                              )}
 
-                            {profile.domain_verified ? (
-                              <span className="text-success flex items-center gap-1">
-                                <Check className="w-4 h-4" /> Verificado
-                              </span>
-                            ) : (
-                              <span className="text-warning flex items-center gap-1">
-                                <AlertCircle className="w-4 h-4" /> Aguardando DNS
-                              </span>
+                              {profile.domain_verified ? (
+                                <span className="text-success flex items-center gap-1 text-sm">
+                                  <Check className="w-4 h-4" /> Verificado
+                                </span>
+                              ) : (
+                                <span className="text-warning flex items-center gap-1 text-sm">
+                                  <AlertCircle className="w-4 h-4" /> Aguardando DNS
+                                </span>
+                              )}
+                            </div>
+
+                            {/* SSL Status */}
+                            {profile.domain_verified && (
+                              <div className="flex items-center gap-2 mt-2">
+                                {sslStatus?.status === 'active' ? (
+                                  <span className="text-success flex items-center gap-1 text-sm">
+                                    <Lock className="w-4 h-4" /> HTTPS ativo
+                                    {sslStatus.expiresAt && (
+                                      <span className="text-muted-foreground text-xs ml-1">
+                                        (expira em {new Date(sslStatus.expiresAt).toLocaleDateString('pt-BR')})
+                                      </span>
+                                    )}
+                                  </span>
+                                ) : sslStatus?.status === 'pending' ? (
+                                  <span className="text-warning flex items-center gap-1 text-sm">
+                                    <ShieldCheck className="w-4 h-4" /> SSL em provisionamento...
+                                  </span>
+                                ) : null}
+                              </div>
                             )}
 
-                            {!profile.domain_verified && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleVerifyDomain()}
-                                disabled={verifyingDomain}
-                              >
-                                {verifyingDomain ? (
-                                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                ) : (
-                                  <RefreshCw className="w-4 h-4 mr-2" />
-                                )}
-                                Verificar agora
-                              </Button>
+                            {lastDomainCheckAt && (
+                              <p className="mt-2 text-xs text-muted-foreground">
+                                Última verificação: {new Date(lastDomainCheckAt).toLocaleString('pt-BR')}
+                              </p>
                             )}
                           </div>
+                        </div>
 
-                          {lastDomainCheckAt && !profile.domain_verified && (
-                            <p className="mt-2 text-xs text-muted-foreground">
-                              Última verificação: {new Date(lastDomainCheckAt).toLocaleString('pt-BR')}
-                            </p>
+                        {/* Action buttons */}
+                        <div className="flex flex-wrap gap-2 pl-16">
+                          {!profile.domain_verified && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleVerifyDomain()}
+                              disabled={verifyingDomain}
+                            >
+                              {verifyingDomain ? (
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              ) : (
+                                <RefreshCw className="w-4 h-4 mr-2" />
+                              )}
+                              Verificar agora
+                            </Button>
                           )}
+                          
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setShowRemoveConfirm(true)}
+                            disabled={removingDomain}
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          >
+                            {removingDomain ? (
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            ) : (
+                              <Trash2 className="w-4 h-4 mr-2" />
+                            )}
+                            Remover domínio
+                          </Button>
                         </div>
                       </div>
                     </CardContent>
@@ -694,18 +782,18 @@ const SettingsPage = () => {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="domain">Seu Domínio</Label>
+                      <Label htmlFor="domain">Seu Domínio ou Subdomínio</Label>
                       <div className="flex gap-2">
                         <Input
                           id="domain"
                           value={domainInput}
                           onChange={(e) => setDomainInput(e.target.value)}
-                          placeholder="meusite.com.br"
-                          disabled={addingDomain}
+                          placeholder="meusite.com.br ou app.meusite.com.br"
+                          disabled={addingDomain || !!profile?.custom_domain}
                         />
                         <Button 
                           onClick={handleAddDomain} 
-                          disabled={addingDomain || !domainInput.trim()}
+                          disabled={addingDomain || !domainInput.trim() || !!profile?.custom_domain}
                         >
                           {addingDomain ? (
                             <>
@@ -718,8 +806,16 @@ const SettingsPage = () => {
                         </Button>
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        Digite apenas o domínio, sem "https://" ou "www"
+                        Exemplos: <code className="bg-muted px-1 rounded">meusite.com.br</code> ou <code className="bg-muted px-1 rounded">app.meusite.com.br</code>
                       </p>
+                      {profile?.custom_domain && (
+                        <Alert className="mt-2">
+                          <Info className="h-4 w-4" />
+                          <AlertDescription className="text-sm">
+                            Para conectar outro domínio, primeiro remova o atual acima.
+                          </AlertDescription>
+                        </Alert>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -737,58 +833,114 @@ const SettingsPage = () => {
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="p-6 space-y-4">
-                      <div className="bg-muted rounded-lg p-4 space-y-3">
-                        <div className="grid grid-cols-3 gap-4 text-sm font-medium text-muted-foreground border-b border-border pb-2">
-                          <span>Tipo</span>
-                          <span>Nome</span>
-                          <span>Destino</span>
-                        </div>
-                        <div className="grid grid-cols-3 gap-4 items-center">
-                          <span className="font-mono bg-background px-2 py-1 rounded text-sm">CNAME</span>
-                          <div className="flex items-center gap-1">
-                            <span className="font-mono bg-background px-2 py-1 rounded text-sm">www</span>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="h-7 w-7 p-0"
-                              onClick={() => copyToClipboard('www')}
-                            >
-                              <Copy className="w-3 h-3" />
-                            </Button>
+                      {/* Dynamic DNS instructions based on domain type */}
+                      {dnsInstructions ? (
+                        <div className="bg-muted rounded-lg p-4 space-y-3">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Info className="w-4 h-4 text-primary" />
+                            <p className="text-sm font-medium text-foreground">
+                              {isSubdomain ? 'Configuração para Subdomínio' : 'Configuração para Domínio'}
+                            </p>
                           </div>
-                          <div className="flex items-center gap-1">
-                            <span className="font-mono bg-background px-2 py-1 rounded text-sm text-xs sm:text-sm">cname.vercel-dns.com</span>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="h-7 w-7 p-0 flex-shrink-0"
-                              onClick={() => copyToClipboard('cname.vercel-dns.com')}
-                            >
-                              <Copy className="w-3 h-3" />
-                            </Button>
+                          <div className="grid grid-cols-3 gap-4 text-sm font-medium text-muted-foreground border-b border-border pb-2">
+                            <span>Tipo</span>
+                            <span>Nome</span>
+                            <span>Destino</span>
+                          </div>
+                          <div className="grid grid-cols-3 gap-4 items-center">
+                            <span className="font-mono bg-background px-2 py-1 rounded text-sm">{dnsInstructions.type}</span>
+                            <div className="flex items-center gap-1">
+                              <span className="font-mono bg-background px-2 py-1 rounded text-sm">{dnsInstructions.name}</span>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-7 w-7 p-0"
+                                onClick={() => copyToClipboard(dnsInstructions.name)}
+                              >
+                                <Copy className="w-3 h-3" />
+                              </Button>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <span className="font-mono bg-background px-2 py-1 rounded text-sm break-all">{dnsInstructions.value}</span>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-7 w-7 p-0 flex-shrink-0"
+                                onClick={() => copyToClipboard(dnsInstructions.value)}
+                              >
+                                <Copy className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </div>
+                          {dnsInstructions.note && (
+                            <p className="text-xs text-muted-foreground mt-2">{dnsInstructions.note}</p>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="bg-muted rounded-lg p-4 space-y-3">
+                          <div className="grid grid-cols-3 gap-4 text-sm font-medium text-muted-foreground border-b border-border pb-2">
+                            <span>Tipo</span>
+                            <span>Nome</span>
+                            <span>Destino</span>
+                          </div>
+                          <div className="grid grid-cols-3 gap-4 items-center">
+                            <span className="font-mono bg-background px-2 py-1 rounded text-sm">CNAME</span>
+                            <div className="flex items-center gap-1">
+                              <span className="font-mono bg-background px-2 py-1 rounded text-sm">www</span>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-7 w-7 p-0"
+                                onClick={() => copyToClipboard('www')}
+                              >
+                                <Copy className="w-3 h-3" />
+                              </Button>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <span className="font-mono bg-background px-2 py-1 rounded text-sm text-xs sm:text-sm">cname.vercel-dns.com</span>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-7 w-7 p-0 flex-shrink-0"
+                                onClick={() => copyToClipboard('cname.vercel-dns.com')}
+                              >
+                                <Copy className="w-3 h-3" />
+                              </Button>
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      )}
 
-                      <Alert>
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertDescription className="text-sm">
-                          <strong>Para domínio raiz (sem www):</strong> Configure um registro A apontando para <code className="bg-muted px-1 rounded">76.76.21.21</code>
-                        </AlertDescription>
-                      </Alert>
-
-                      {domainMisconfigured ? (
+                      {!isSubdomain && (
                         <Alert>
                           <AlertCircle className="h-4 w-4" />
                           <AlertDescription className="text-sm">
-                            A Vercel detectou que o DNS pode estar <strong>apontando para outro serviço</strong>. Revise os registros no provedor.
+                            <strong>Para domínio raiz (sem www):</strong> Configure um registro A apontando para <code className="bg-muted px-1 rounded">76.76.21.21</code>
                           </AlertDescription>
                         </Alert>
-                      ) : null}
+                      )}
+
+                      {domainMisconfigured && (
+                        <Alert variant="destructive">
+                          <AlertCircle className="h-4 w-4" />
+                          <AlertDescription className="text-sm space-y-2">
+                            <p><strong>DNS Misconfigured:</strong> O DNS pode estar apontando para outro serviço.</p>
+                            <ul className="list-disc list-inside text-xs space-y-1 mt-2">
+                              <li>Verifique se não há registros A ou CNAME conflitantes no seu provedor</li>
+                              <li>Remova registros antigos que possam estar apontando para outro IP</li>
+                              <li>Aguarde a propagação DNS (pode levar até 48h)</li>
+                              <li>Certifique-se de que o domínio não está em outro projeto Vercel</li>
+                            </ul>
+                          </AlertDescription>
+                        </Alert>
+                      )}
 
                       {vercelVerification?.length ? (
                         <div className="bg-muted rounded-lg p-4 space-y-3">
-                          <p className="text-sm font-medium text-foreground">Registros exigidos pela Vercel</p>
+                          <p className="text-sm font-medium text-foreground flex items-center gap-2">
+                            <AlertCircle className="w-4 h-4 text-warning" />
+                            Registros adicionais exigidos pela Vercel
+                          </p>
                           <div className="space-y-2">
                             {vercelVerification.map((rec, idx) => (
                               <div
@@ -866,6 +1018,15 @@ const SettingsPage = () => {
         open={showPricingModal} 
         onOpenChange={setShowPricingModal}
         userFullName={profile?.full_name}
+      />
+      <ConfirmDialog
+        open={showRemoveConfirm}
+        onOpenChange={setShowRemoveConfirm}
+        title="Remover Domínio"
+        description={`Tem certeza que deseja remover o domínio "${profile?.custom_domain}"? Esta ação irá desconectar o domínio do seu projeto.`}
+        confirmText="Remover"
+        onConfirm={handleRemoveDomain}
+        variant="destructive"
       />
     </DashboardLayout>
   );

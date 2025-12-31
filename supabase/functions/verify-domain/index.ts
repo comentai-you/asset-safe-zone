@@ -28,6 +28,26 @@ interface VercelProjectDomainResponse {
   };
 }
 
+// Get domain details (includes SSL status)
+interface VercelDomainDetailsResponse {
+  name?: string;
+  verified?: boolean;
+  gitBranch?: string;
+  redirect?: string;
+  redirectStatusCode?: number;
+  certs?: Array<{
+    id: string;
+    autoRenew: boolean;
+    cns: string[];
+    createdAt: number;
+    expiresAt: number;
+  }>;
+  error?: {
+    code: string;
+    message: string;
+  };
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -121,14 +141,15 @@ Deno.serve(async (req) => {
       });
     }
 
-    let vercelUrl = `https://api.vercel.com/v9/projects/${projectId}/domains/${encodeURIComponent(domain)}/verify`;
+    // First, verify the domain
+    let verifyUrl = `https://api.vercel.com/v9/projects/${projectId}/domains/${encodeURIComponent(domain)}/verify`;
     if (teamId) {
-      vercelUrl += `?teamId=${encodeURIComponent(teamId)}`;
+      verifyUrl += `?teamId=${encodeURIComponent(teamId)}`;
     }
 
     console.log(`Verifying domain ${domain} on Vercel project ${projectId}`);
 
-    const vercelResponse = await fetch(vercelUrl, {
+    const vercelResponse = await fetch(verifyUrl, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${vercelToken}`,
@@ -163,6 +184,46 @@ Deno.serve(async (req) => {
 
     const verified = !!vercelData.verified;
 
+    // Now get domain details for SSL info
+    let sslStatus: 'pending' | 'active' | 'error' | null = null;
+    let sslExpiresAt: string | null = null;
+
+    if (verified) {
+      try {
+        let detailsUrl = `https://api.vercel.com/v9/projects/${projectId}/domains/${encodeURIComponent(domain)}`;
+        if (teamId) {
+          detailsUrl += `?teamId=${encodeURIComponent(teamId)}`;
+        }
+
+        const detailsResponse = await fetch(detailsUrl, {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${vercelToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (detailsResponse.ok) {
+          const detailsData: VercelDomainDetailsResponse = await detailsResponse.json();
+          console.log('Vercel domain details:', JSON.stringify(detailsData));
+
+          if (detailsData.certs && detailsData.certs.length > 0) {
+            sslStatus = 'active';
+            // Get the latest cert expiry
+            const latestCert = detailsData.certs.reduce((latest, cert) => 
+              cert.expiresAt > (latest?.expiresAt || 0) ? cert : latest
+            , detailsData.certs[0]);
+            sslExpiresAt = new Date(latestCert.expiresAt).toISOString();
+          } else {
+            sslStatus = 'pending';
+          }
+        }
+      } catch (sslError) {
+        console.error('Error fetching SSL details:', sslError);
+        // Don't fail the whole request, just don't include SSL info
+      }
+    }
+
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -175,6 +236,26 @@ Deno.serve(async (req) => {
       console.error('Error updating domain_verified:', updateError);
     }
 
+    // Determine if this is a subdomain
+    const parts = domain.split('.');
+    const isSubdomain = parts.length > 2 || (parts.length === 2 && parts[0] !== 'www');
+    const isApex = parts.length === 2;
+
+    // Generate appropriate DNS instructions
+    const dnsInstructions = isSubdomain 
+      ? {
+          type: 'CNAME',
+          name: parts.slice(0, -2).join('.') || parts[0], // e.g., "app" for app.example.com
+          value: 'cname.vercel-dns.com',
+          note: 'Para subdomínios, use CNAME apontando para cname.vercel-dns.com'
+        }
+      : {
+          type: 'A',
+          name: '@',
+          value: '76.76.21.21',
+          note: 'Para domínio raiz, use registro A. Para www, adicione também um CNAME.'
+        };
+
     return new Response(
       JSON.stringify({
         success: true,
@@ -183,6 +264,13 @@ Deno.serve(async (req) => {
         misconfigured: vercelData.misconfigured ?? null,
         verification: vercelData.verification ?? null,
         checkedAt: new Date().toISOString(),
+        isSubdomain,
+        isApex,
+        dnsInstructions,
+        ssl: sslStatus ? {
+          status: sslStatus,
+          expiresAt: sslExpiresAt,
+        } : null,
       }),
       {
         status: 200,

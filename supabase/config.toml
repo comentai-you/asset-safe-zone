@@ -17,3 +17,9 @@ verify_jwt = false
 
 [functions.add-domain]
 verify_jwt = false
+
+[functions.verify-domain]
+verify_jwt = false
+
+[functions.remove-domain]
+verify_jwt = false
