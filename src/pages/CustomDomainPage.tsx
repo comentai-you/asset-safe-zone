@@ -38,21 +38,31 @@ const CustomDomainPage = () => {
       const hostname = window.location.hostname;
       const path = location.pathname;
 
-      console.log(`Resolving custom domain: ${hostname}${path}`);
+      console.log(`[CustomDomain] Resolving: ${hostname}${path}`);
+      console.log(`[CustomDomain] Supabase URL configured: ${!!import.meta.env.VITE_SUPABASE_URL}`);
 
       try {
-        const { data, error } = await supabase.functions.invoke<ResolvedDomain>('resolve-custom-domain', {
+        const response = await supabase.functions.invoke<ResolvedDomain>('resolve-custom-domain', {
           body: { hostname, path }
         });
 
-        if (error) throw error;
+        console.log('[CustomDomain] Edge function response:', response);
+
+        if (response.error) {
+          console.error('[CustomDomain] Edge function error:', response.error);
+          throw response.error;
+        }
+
+        const data = response.data;
 
         if (!data?.found) {
-          console.log('Domain not found or not verified');
+          console.log('[CustomDomain] Domain not found or not verified');
           setNotFound(true);
           setLoading(false);
           return;
         }
+
+        console.log('[CustomDomain] Domain resolved successfully:', data);
 
         // Determine which slug to show
         let slugToShow: string | null = null;
@@ -60,23 +70,28 @@ const CustomDomainPage = () => {
         if (data.type === 'page' && data.slug) {
           // Direct page access via path
           slugToShow = data.slug;
+          console.log('[CustomDomain] Using page slug:', slugToShow);
         } else if (data.type === 'homepage' && data.defaultPage?.slug) {
           // Homepage - show default page
           slugToShow = data.defaultPage.slug;
+          console.log('[CustomDomain] Using homepage slug:', slugToShow);
         } else if (data.type === 'no_pages') {
           // No pages published
+          console.log('[CustomDomain] No pages published for this domain');
           setNotFound(true);
           setLoading(false);
           return;
         }
 
         if (slugToShow) {
+          console.log('[CustomDomain] Setting resolved slug:', slugToShow);
           setResolvedSlug(slugToShow);
         } else {
+          console.log('[CustomDomain] No slug to show, setting notFound');
           setNotFound(true);
         }
       } catch (err) {
-        console.error('Error resolving custom domain:', err);
+        console.error('[CustomDomain] Error resolving custom domain:', err);
         setNotFound(true);
       } finally {
         setLoading(false);
