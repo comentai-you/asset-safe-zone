@@ -899,12 +899,12 @@ const SettingsPage = () => {
                               </Button>
                             </div>
                             <div className="flex items-center gap-1">
-                              <span className="font-mono bg-background px-2 py-1 rounded text-sm">76.76.21.21</span>
+                              <span className="font-mono bg-background px-2 py-1 rounded text-sm">216.198.79.1</span>
                               <Button 
                                 variant="ghost" 
                                 size="sm" 
                                 className="h-7 w-7 p-0 flex-shrink-0"
-                                onClick={() => copyToClipboard('76.76.21.21')}
+                                onClick={() => copyToClipboard('216.198.79.1')}
                               >
                                 <Copy className="w-3 h-3" />
                               </Button>
