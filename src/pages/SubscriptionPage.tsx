@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Crown, Sparkles, CreditCard, AlertCircle, ExternalLink, Loader2, Check, X, RefreshCw } from "lucide-react";
+import { Crown, Sparkles, CreditCard, AlertCircle, ExternalLink, Loader2, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -112,7 +112,8 @@ const SubscriptionPage = () => {
         return {
           name: 'PRO',
           price: 'R$ 69,90/mês',
-          pages: 10,
+          pages: 8,
+          domains: 3,
           icon: Crown,
           color: 'text-primary',
           bgColor: 'bg-primary/10',
@@ -121,7 +122,8 @@ const SubscriptionPage = () => {
         return {
           name: 'Essencial',
           price: 'R$ 29,90/mês',
-          pages: 3,
+          pages: 2,
+          domains: 1,
           icon: Sparkles,
           color: 'text-muted-foreground',
           bgColor: 'bg-muted',
@@ -235,19 +237,28 @@ const SubscriptionPage = () => {
                 </li>
                 <li className="flex items-center gap-3">
                   <Check className="w-5 h-5 text-success" />
-                  <span>Personalização completa</span>
+                  <span>Pixel do Facebook/Google ADS</span>
                 </li>
-                {profile?.plan_type === 'pro' && (
+                <li className="flex items-center gap-3">
+                  <Check className="w-5 h-5 text-success" />
+                  <span>Até {plan.domains} domínio{plan.domains > 1 ? 's' : ''} personalizado{plan.domains > 1 ? 's' : ''}</span>
+                </li>
+                {profile?.plan_type === 'pro' ? (
                   <>
+                    <li className="flex items-center gap-3">
+                      <Check className="w-5 h-5 text-success" />
+                      <span>Zero marca d'água</span>
+                    </li>
                     <li className="flex items-center gap-3">
                       <Check className="w-5 h-5 text-success" />
                       <span>Suporte prioritário</span>
                     </li>
-                    <li className="flex items-center gap-3 text-muted-foreground">
-                      <RefreshCw className="w-5 h-5" />
-                      <span>Remoção da marca d'água (em breve)</span>
-                    </li>
                   </>
+                ) : (
+                  <li className="flex items-center gap-3 text-muted-foreground">
+                    <Check className="w-5 h-5 text-muted-foreground" />
+                    <span>Marca d'água no rodapé</span>
+                  </li>
                 )}
               </ul>
             </CardContent>

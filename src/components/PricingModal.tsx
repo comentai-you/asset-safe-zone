@@ -75,18 +75,21 @@ const PricingModal = ({ open, onOpenChange, userFullName }: PricingModalProps) =
 
   const essentialFeatures = [
     { text: "Tudo do Gratuito +", highlight: false },
-    { text: "3 Páginas Ativas", highlight: true },
-    { text: "Páginas VSL com Vídeo", highlight: true },
+    { text: "2 Páginas Ativas", highlight: true },
+    { text: "Página VSL com Vídeo", highlight: true },
     { text: "Página de Vendas", highlight: false },
     { text: "Delay no Botão CTA", highlight: true },
-    { text: "Domínio Personalizado", highlight: false },
+    { text: "1 Domínio Personalizado", highlight: false },
+    { text: "Pixel do Facebook/Google ADS", highlight: false },
+    { text: "Marca d'água no rodapé", highlight: false },
   ];
 
   const proFeatures = [
     { text: "Tudo do Essencial +", highlight: false },
-    { text: "10 Páginas Ativas", highlight: true },
-    { text: "API de Conversão (Server-Side)", highlight: false },
+    { text: "8 Páginas Ativas", highlight: true },
+    { text: "Conecte até 3 Domínios", highlight: true },
     { text: "Zero Marca d'água", highlight: true },
+    { text: "Pixel do Facebook/Google ADS", highlight: false },
     { text: "Suporte Prioritário", highlight: false },
   ];
 
@@ -201,16 +204,16 @@ const PricingModal = ({ open, onOpenChange, userFullName }: PricingModalProps) =
             </CardContent>
           </Card>
 
-          {/* PRO Plan - Coming Soon */}
-          <Card className="relative border-border/50 opacity-75">
+          {/* PRO Plan */}
+          <Card className="relative border-border/50">
             <CardContent className="p-5">
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
-                  <Crown className="w-5 h-5 text-muted-foreground" />
+                <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+                  <Crown className="w-5 h-5 text-primary" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-foreground">PRO</h3>
-                  <p className="text-xs text-muted-foreground">Em breve</p>
+                  <p className="text-xs text-muted-foreground">Para profissionais</p>
                 </div>
               </div>
 
@@ -233,9 +236,20 @@ const PricingModal = ({ open, onOpenChange, userFullName }: PricingModalProps) =
               <Button 
                 variant="outline" 
                 className="w-full"
-                disabled
+                onClick={() => handleSubscribe("pro")}
+                disabled={loadingPlan !== null}
               >
-                Em Breve
+                {loadingPlan === 'pro' ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Processando...
+                  </>
+                ) : (
+                  <>
+                    <Crown className="w-4 h-4 mr-2" />
+                    Assinar PRO
+                  </>
+                )}
               </Button>
             </CardContent>
           </Card>
