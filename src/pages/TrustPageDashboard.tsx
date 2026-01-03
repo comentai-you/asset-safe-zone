@@ -42,9 +42,9 @@ const getMaxPages = (planType: string) => {
   switch (planType) {
     case 'pro':
     case 'elite':
-      return 10;
+      return 8;
     case 'essential':
-      return 3;
+      return 2;
     default:
       return 1; // FREE plan
   }
