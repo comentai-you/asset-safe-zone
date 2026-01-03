@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import AdsViolationBar from "@/components/AdsViolationBar";
-import TrustPageWatermark from "@/components/TrustPageWatermark";
+
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface LandingPageViewProps {
@@ -201,16 +201,13 @@ const LandingPageView = ({ slugOverride }: LandingPageViewProps = {}) => {
     );
   }
 
-  // Check if watermark should show (non-PRO users - free/essential show watermark)
-  const showWatermark = ownerPlan === 'free' || ownerPlan === 'essential';
-
   return (
     <div 
       className="min-h-screen"
       style={{ backgroundColor: pageData.colors.background }}
     >
       {showViolationBar && <AdsViolationBar />}
-      <div className={`${showViolationBar ? "pt-[100px] sm:pt-[80px]" : ""} ${showWatermark ? "pb-10" : ""}`}>
+      <div className={`${showViolationBar ? "pt-[100px] sm:pt-[80px]" : ""}`}>
         {pageData.template_type === 'sales' ? (
           <SalesPageTemplate data={pageData} isMobile={isMobile} />
         ) : pageData.template_type === 'bio' ? (
@@ -219,7 +216,6 @@ const LandingPageView = ({ slugOverride }: LandingPageViewProps = {}) => {
           <HighConversionTemplate data={pageData} isMobile={isMobile} />
         )}
       </div>
-      <TrustPageWatermark ownerPlan={ownerPlan} />
     </div>
   );
 };
