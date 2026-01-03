@@ -33,12 +33,17 @@ const CustomDomainPage = () => {
   const [resolvedSlug, setResolvedSlug] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
 
+  const debugEnabled = new URLSearchParams(location.search).has('tp_debug');
+  const [debugInfo, setDebugInfo] = useState<any>(null);
+
   useEffect(() => {
     const resolveDomain = async () => {
       const hostname = window.location.hostname;
       const path = location.pathname;
 
-      console.log(`[CustomDomain] Starting resolution for: ${hostname}${path}`);
+      if (debugEnabled) {
+        console.log(`[CustomDomain] Starting resolution for: ${hostname}${path}`);
+      }
 
       // Extract slug directly from path - handle /p/ prefix for legacy support
       let pathSlug = path || '';
@@ -46,21 +51,42 @@ const CustomDomainPage = () => {
         pathSlug = pathSlug.substring(3);
       }
       pathSlug = pathSlug.replace(/^\/+/, '').split('/')[0] || '';
-      
+
+      if (debugEnabled) {
+        setDebugInfo({
+          stage: 'before_invoke',
+          hostname,
+          path,
+          pathSlug,
+        });
+      }
+
       try {
-        console.log('[CustomDomain] Calling edge function...');
+        if (debugEnabled) {
+          console.log('[CustomDomain] Calling edge function...');
+        }
         const response = await supabase.functions.invoke<ResolvedDomain>('resolve-custom-domain', {
-          body: { hostname, path }
+          body: { hostname, path },
         });
 
-        console.log('[CustomDomain] Edge function response:', response);
+        if (debugEnabled) {
+          console.log('[CustomDomain] Edge function response:', response);
+          setDebugInfo({
+            stage: 'after_invoke',
+            hostname,
+            path,
+            pathSlug,
+            responseError: response.error,
+            responseData: response.data,
+          });
+        }
 
         // Check for network/invoke errors
         if (response.error) {
           console.error('[CustomDomain] Edge function error:', response.error);
           // Fallback: try direct slug lookup
           if (pathSlug) {
-            console.log('[CustomDomain] Fallback to direct slug:', pathSlug);
+            if (debugEnabled) console.log('[CustomDomain] Fallback to direct slug:', pathSlug);
             setResolvedSlug(pathSlug);
           } else {
             setNotFound(true);
@@ -70,7 +96,9 @@ const CustomDomainPage = () => {
         }
 
         const data = response.data;
-        console.log('[CustomDomain] Parsed data:', JSON.stringify(data));
+        if (debugEnabled) {
+          console.log('[CustomDomain] Parsed data:', JSON.stringify(data));
+        }
 
         // Domain not found/verified
         if (!data?.found) {
@@ -117,22 +145,48 @@ const CustomDomainPage = () => {
     };
 
     resolveDomain();
-  }, [location.pathname]);
+  }, [location.pathname, location.search]);
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        {debugEnabled && debugInfo && (
+          <div className="fixed bottom-4 left-4 right-4 max-w-3xl mx-auto rounded-lg border bg-background/95 p-3 text-xs text-foreground shadow-lg">
+            <div className="font-semibold mb-1">Debug (tp_debug=1)</div>
+            <pre className="whitespace-pre-wrap break-words">{JSON.stringify(debugInfo, null, 2)}</pre>
+          </div>
+        )}
       </div>
     );
   }
 
   if (notFound || !resolvedSlug) {
-    return <NotFound />;
+    return (
+      <>
+        {debugEnabled && debugInfo && (
+          <div className="fixed bottom-4 left-4 right-4 max-w-3xl mx-auto rounded-lg border bg-background/95 p-3 text-xs text-foreground shadow-lg z-50">
+            <div className="font-semibold mb-1">Debug (tp_debug=1)</div>
+            <pre className="whitespace-pre-wrap break-words">{JSON.stringify({ ...debugInfo, resolvedSlug, notFound }, null, 2)}</pre>
+          </div>
+        )}
+        <NotFound />
+      </>
+    );
   }
 
   // Render the landing page with the resolved slug
-  return <LandingPageView slugOverride={resolvedSlug} />;
+  return (
+    <>
+      {debugEnabled && debugInfo && (
+        <div className="fixed bottom-4 left-4 right-4 max-w-3xl mx-auto rounded-lg border bg-background/95 p-3 text-xs text-foreground shadow-lg z-50">
+          <div className="font-semibold mb-1">Debug (tp_debug=1)</div>
+          <pre className="whitespace-pre-wrap break-words">{JSON.stringify({ ...debugInfo, resolvedSlug, notFound }, null, 2)}</pre>
+        </div>
+      )}
+      <LandingPageView slugOverride={resolvedSlug} />
+    </>
+  );
 };
 
 export default CustomDomainPage;

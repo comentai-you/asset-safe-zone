@@ -38,11 +38,6 @@ const KNOWN_APP_DOMAINS = [
 const isKnownAppDomain = (hostname: string): boolean =>
   KNOWN_APP_DOMAINS.some((domain) => hostname === domain || hostname.endsWith(`.${domain}`));
 
-// Verifica se o hostname atual é um domínio de cliente (NÃO está na allowlist)
-const isCustomDomain = (): boolean => {
-  const hostname = window.location.hostname.toLowerCase();
-  return !isKnownAppDomain(hostname);
-};
 
 // Rotas para domínios de CLIENTES - TUDO resolve via CustomDomainPage
 const CustomDomainRoutes = () => (
@@ -109,8 +104,20 @@ const SystemRoutes = () => (
 
 // App principal com separação RÍGIDA entre Sistema e Cliente
 const App = () => {
-  // Se é domínio de cliente, renderiza APENAS as rotas públicas (leve, sem providers desnecessários)
-  if (isCustomDomain()) {
+  const hostname = window.location.hostname.toLowerCase();
+  const customDomain = !isKnownAppDomain(hostname);
+
+  // Debug opcional: adicione ?tp_debug=1 na URL
+  if (new URLSearchParams(window.location.search).has('tp_debug')) {
+    console.log('[DomainRouting]', {
+      hostname,
+      customDomain,
+      pathname: window.location.pathname,
+    });
+  }
+
+  // Se é domínio de cliente, renderiza APENAS as rotas públicas
+  if (customDomain) {
     return (
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
