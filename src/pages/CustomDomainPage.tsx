@@ -40,11 +40,14 @@ const CustomDomainPage = () => {
 
       console.log(`[CustomDomain] Starting resolution for: ${hostname}${path}`);
 
-      // Extract slug directly from path for faster resolution
-      const pathSlug = path.replace(/^\//, '').split('/')[0] || '';
+      // Extract slug directly from path - handle /p/ prefix for legacy support
+      let pathSlug = path || '';
+      if (pathSlug.startsWith('/p/')) {
+        pathSlug = pathSlug.substring(3);
+      }
+      pathSlug = pathSlug.replace(/^\/+/, '').split('/')[0] || '';
       
       try {
-        // First, try to resolve via edge function for domain validation
         console.log('[CustomDomain] Calling edge function...');
         const response = await supabase.functions.invoke<ResolvedDomain>('resolve-custom-domain', {
           body: { hostname, path }
@@ -52,64 +55,58 @@ const CustomDomainPage = () => {
 
         console.log('[CustomDomain] Edge function response:', response);
 
+        // Check for network/invoke errors
         if (response.error) {
           console.error('[CustomDomain] Edge function error:', response.error);
-          // If edge function fails, try direct slug lookup as fallback
+          // Fallback: try direct slug lookup
           if (pathSlug) {
-            console.log('[CustomDomain] Trying direct slug lookup:', pathSlug);
+            console.log('[CustomDomain] Fallback to direct slug:', pathSlug);
             setResolvedSlug(pathSlug);
-            setLoading(false);
-            return;
+          } else {
+            setNotFound(true);
           }
-          throw response.error;
+          setLoading(false);
+          return;
         }
 
         const data = response.data;
+        console.log('[CustomDomain] Parsed data:', JSON.stringify(data));
 
+        // Domain not found/verified
         if (!data?.found) {
-          console.log('[CustomDomain] Domain not found or not verified');
-          // Try direct slug lookup as fallback
+          console.log('[CustomDomain] Domain not found, trying direct slug');
           if (pathSlug) {
-            console.log('[CustomDomain] Trying direct slug lookup:', pathSlug);
             setResolvedSlug(pathSlug);
-            setLoading(false);
-            return;
+          } else {
+            setNotFound(true);
           }
-          setNotFound(true);
           setLoading(false);
           return;
         }
 
-        console.log('[CustomDomain] Domain resolved successfully:', data);
-
-        // Determine which slug to show
-        let slugToShow: string | null = null;
-
+        // Handle response types
         if (data.type === 'page' && data.slug) {
-          slugToShow = data.slug;
-          console.log('[CustomDomain] Using page slug:', slugToShow);
+          console.log('[CustomDomain] Page found, slug:', data.slug);
+          setResolvedSlug(data.slug);
         } else if (data.type === 'homepage' && data.defaultPage?.slug) {
-          slugToShow = data.defaultPage.slug;
-          console.log('[CustomDomain] Using homepage slug:', slugToShow);
+          console.log('[CustomDomain] Homepage, default slug:', data.defaultPage.slug);
+          setResolvedSlug(data.defaultPage.slug);
         } else if (data.type === 'no_pages') {
-          console.log('[CustomDomain] No pages published for this domain');
+          console.log('[CustomDomain] No published pages');
           setNotFound(true);
-          setLoading(false);
-          return;
-        }
-
-        if (slugToShow) {
-          console.log('[CustomDomain] Setting resolved slug:', slugToShow);
-          setResolvedSlug(slugToShow);
         } else {
-          console.log('[CustomDomain] No slug to show, setting notFound');
-          setNotFound(true);
+          // Unexpected response - try path slug as fallback
+          console.log('[CustomDomain] Unexpected response, using path slug:', pathSlug);
+          if (pathSlug) {
+            setResolvedSlug(pathSlug);
+          } else {
+            setNotFound(true);
+          }
         }
       } catch (err) {
-        console.error('[CustomDomain] Error resolving custom domain:', err);
-        // Final fallback: try using path slug directly
+        console.error('[CustomDomain] Exception:', err);
+        // Final fallback
         if (pathSlug) {
-          console.log('[CustomDomain] Using path slug as final fallback:', pathSlug);
           setResolvedSlug(pathSlug);
         } else {
           setNotFound(true);
