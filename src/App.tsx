@@ -31,27 +31,22 @@ const KNOWN_APP_DOMAINS = [
   'trustpageapp.com',
   'lovable.app',
   'lovableproject.com',
-  'vercel.app',
   'trustpage-one.vercel.app',
 ] as const;
+
+// Match seguro: hostname === domínio OU subdomínio direto (ex: *.lovableproject.com)
+const isKnownAppDomain = (hostname: string): boolean =>
+  KNOWN_APP_DOMAINS.some((domain) => hostname === domain || hostname.endsWith(`.${domain}`));
 
 // Verifica se o hostname atual é um domínio de cliente (NÃO está na allowlist)
 const isCustomDomain = (): boolean => {
   const hostname = window.location.hostname.toLowerCase();
-  return !KNOWN_APP_DOMAINS.some(domain => hostname.includes(domain));
+  return !isKnownAppDomain(hostname);
 };
 
-// Rotas para domínios de CLIENTES - apenas páginas públicas
+// Rotas para domínios de CLIENTES - TUDO resolve via CustomDomainPage
 const CustomDomainRoutes = () => (
   <Routes>
-    {/* Home do domínio customizado resolve a página padrão via edge function */}
-    <Route path="/" element={<CustomDomainPage />} />
-
-    {/* Páginas públicas (suporta URL limpa e legado /p/:slug) */}
-    <Route path="/p/:slug" element={<LandingPageView />} />
-    <Route path="/:slug" element={<LandingPageView />} />
-
-    {/* Fallback para qualquer coisa (ex: /foo/bar) */}
     <Route path="*" element={<CustomDomainPage />} />
   </Routes>
 );
