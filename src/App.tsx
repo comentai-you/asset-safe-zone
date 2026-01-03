@@ -41,11 +41,17 @@ const isCustomDomain = (): boolean => {
   return !KNOWN_APP_DOMAINS.some(domain => hostname.includes(domain));
 };
 
-// Rotas para domínios de CLIENTES - apenas páginas públicas, sem contexto de sistema
+// Rotas para domínios de CLIENTES - apenas páginas públicas
 const CustomDomainRoutes = () => (
   <Routes>
+    {/* Home do domínio customizado resolve a página padrão via edge function */}
     <Route path="/" element={<CustomDomainPage />} />
-    <Route path="/:slug" element={<CustomDomainPage />} />
+
+    {/* Páginas públicas (suporta URL limpa e legado /p/:slug) */}
+    <Route path="/p/:slug" element={<LandingPageView />} />
+    <Route path="/:slug" element={<LandingPageView />} />
+
+    {/* Fallback para qualquer coisa (ex: /foo/bar) */}
     <Route path="*" element={<CustomDomainPage />} />
   </Routes>
 );
