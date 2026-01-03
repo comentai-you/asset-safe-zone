@@ -14,7 +14,9 @@ export default defineConfig(({ mode }) => ({
     react(),
     mode === "development" && componentTagger(),
     VitePWA({
-      registerType: "autoUpdate",
+      // Usamos registro manual (ver src/main.tsx) para conseguir forçar updates em domínios customizados
+      registerType: "prompt",
+      injectRegister: null,
       includeAssets: ["favicon.png", "favicon.svg"],
       manifest: {
         name: "TrustPage",
